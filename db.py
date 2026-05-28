@@ -5,6 +5,7 @@ Tables : signals_relance (isolée par owner_id), auth (mots de passe hashés)
 import sqlite3
 import os
 import hashlib
+import hmac
 import secrets
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "data", "naali.db")
@@ -437,14 +438,19 @@ def set_password(owner_id: str, password: str) -> None:
 
 
 def check_password(owner_id: str, password: str) -> bool:
-    """Vérifie le mot de passe. Retourne False si aucun mot de passe défini."""
+    """Vérifie le mot de passe. Utilise hmac.compare_digest pour éviter les timing attacks."""
     with _conn() as con:
         row = con.execute(
             "SELECT password_hash, salt FROM auth WHERE owner_id = ?", (owner_id,)
         ).fetchone()
     if not row:
+        # Hasher quand même pour éviter l'énumération d'utilisateurs via timing
+        _hash_password(password, "naali_dummy_salt_constant_000")
         return False
-    return _hash_password(password, row["salt"]) == row["password_hash"]
+    return hmac.compare_digest(
+        _hash_password(password, row["salt"]),
+        row["password_hash"]
+    )
 
 
 def has_password(owner_id: str) -> bool:

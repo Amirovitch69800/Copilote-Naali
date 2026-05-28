@@ -151,7 +151,7 @@ def login():
 def api_login_check():
     owner_id = (request.json or {}).get("owner_id", "")
     if owner_id not in PROFILES:
-        return jsonify({"error": "Profil introuvable"}), 404
+        return jsonify({"has_password": False})
     return jsonify({"has_password": _db.has_password(owner_id)})
 
 @app.route("/api/login/authenticate", methods=["POST"])
@@ -163,6 +163,7 @@ def api_login_authenticate():
         return jsonify({"error": "Profil introuvable"}), 400
     if not _db.check_password(owner_id, password):
         return jsonify({"error": "Mot de passe incorrect"}), 401
+    session.clear()
     session["owner_id"] = owner_id
     return jsonify({"ok": True, "redirect": url_for("index")})
 
@@ -283,8 +284,8 @@ def api_today():
         import concurrent.futures as _cf
         from hubspot.deals import get_ca_mois_courant, get_ca_ytd
         with _cf.ThreadPoolExecutor(max_workers=2) as ex:
-            f_m = ex.submit(get_ca_mois_courant)
-            f_y = ex.submit(get_ca_ytd)
+            f_m = ex.submit(get_ca_mois_courant, _owner_id())
+            f_y = ex.submit(get_ca_ytd, _owner_id())
             ca_mois, ca_ytd = f_m.result(), f_y.result()
         pharmacies = _load_pharmacies()
         ca_objectif = sum(float(p.get("ca_2025") or p.get("ca") or 0) for p in filter_clients(pharmacies))
@@ -564,8 +565,8 @@ def api_kpis():
     # Tous les appels HubSpot en parallèle
     import concurrent.futures
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as ex:
-        f_mois    = ex.submit(get_ca_mois_courant)
-        f_ytd     = ex.submit(get_ca_ytd)
+        f_mois    = ex.submit(get_ca_mois_courant, owner)
+        f_ytd     = ex.submit(get_ca_ytd, owner)
         f_implant = ex.submit(get_implantations_mois, owner)
         f_goals   = ex.submit(get_goals_mois, user_id)
         f_portefeuille = ex.submit(get_nb_clients_prospects, owner)

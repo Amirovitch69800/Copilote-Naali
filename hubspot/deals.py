@@ -26,8 +26,8 @@ def _h():
     }
 
 
-def _sum_deals(date_debut: str, date_fin: str) -> float:
-    """Somme des montants de deals fermés entre deux dates (owner = HUBSPOT_OWNER_ID)."""
+def _sum_deals(date_debut: str, date_fin: str, owner_id: str = None) -> float:
+    """Somme des montants de deals fermés entre deux dates pour un owner donné."""
     if not HUBSPOT_API_KEY:
         return 0.0
     try:
@@ -36,7 +36,7 @@ def _sum_deals(date_debut: str, date_fin: str) -> float:
                 {"propertyName": "closedate", "operator": "GTE", "value": date_debut},
                 {"propertyName": "closedate", "operator": "LTE", "value": date_fin},
                 {"propertyName": "hubspot_owner_id", "operator": "EQ",
-                 "value": str(HUBSPOT_OWNER_ID)},
+                 "value": str(owner_id or HUBSPOT_OWNER_ID)},
             ]}],
             "properties": ["amount"],
             "limit": 100,
@@ -60,16 +60,16 @@ def _sum_deals(date_debut: str, date_fin: str) -> float:
         return 0.0
 
 
-def get_ca_mois_courant() -> float:
-    """CA du mois civil en cours (1er du mois → aujourd'hui)."""
+def get_ca_mois_courant(owner_id: str = None) -> float:
+    """CA du mois civil en cours (1er du mois → aujourd'hui) pour l'owner donné."""
     today = date.today()
-    return _sum_deals(today.replace(day=1).strftime("%Y-%m-%d"), today.strftime("%Y-%m-%d"))
+    return _sum_deals(today.replace(day=1).strftime("%Y-%m-%d"), today.strftime("%Y-%m-%d"), owner_id=owner_id)
 
 
-def get_ca_ytd() -> float:
-    """CA depuis le 1er janvier de l'année en cours jusqu'à aujourd'hui."""
+def get_ca_ytd(owner_id: str = None) -> float:
+    """CA depuis le 1er janvier de l'année en cours jusqu'à aujourd'hui pour l'owner donné."""
     today = date.today()
-    return _sum_deals(f"{today.year}-01-01", today.strftime("%Y-%m-%d"))
+    return _sum_deals(f"{today.year}-01-01", today.strftime("%Y-%m-%d"), owner_id=owner_id)
 
 
 # ─── Pipeline IDs ─────────────────────────────────────────────────────────────
