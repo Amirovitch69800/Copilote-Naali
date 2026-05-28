@@ -37,7 +37,7 @@ from datetime import datetime, date, timedelta
 import pytz
 import io
 
-from config import PROFILES, HUB_ID, TEST_MODE, SECRET_KEY, HUBSPOT_OWNER_ID, OWNER_NAME, CSV_PATH, HOME_LAT, HOME_LON
+from config import PROFILES, HUB_ID, TEST_MODE, SECRET_KEY, HUBSPOT_OWNER_ID, OWNER_NAME, HOME_LAT, HOME_LON
 
 from core.calendrier import get_prochain_lundi, get_jours_ouvrables, get_semaines, formater_date
 from core.ics_export import generer_ics
@@ -84,7 +84,6 @@ if DEMO_MODE:
         "owner_id":  _DEMO_OWNER,
         "name":      "Amir Ounissi",
         "email":     "demo@naali.fr",
-        "csv_path":  "",
         "home_lat":  43.2965,
         "home_lon":  5.3698,
         "home_city": "Marseille",
@@ -98,12 +97,6 @@ def _profile() -> dict:
 def _owner_id() -> str:
     return _profile()["owner_id"]
 
-def _csv_path() -> str:
-    path = _profile()["csv_path"]
-    if os.path.exists(os.path.join(ROOT, path)):
-        return path
-    raise FileNotFoundError(path)
-
 def _home_coords() -> tuple:
     p = _profile()
     return p.get("home_lat"), p.get("home_lon")
@@ -112,9 +105,6 @@ def _load_pharmacies(force_refresh: bool = False) -> list:
     """Source unique de données pharmacies : HubSpot API (cache TTL 30 min)."""
     return load_pharmacies_hubspot(owner_id=_owner_id(), force_refresh=force_refresh)
 
-@app.errorhandler(FileNotFoundError)
-def handle_csv_missing(e):
-    return jsonify({"error": "csv_manquant", "message": str(e)}), 404
 
 if DEMO_MODE:
     @app.before_request
@@ -209,20 +199,16 @@ def api_register():
     if len(password) < 6:
         return jsonify({"error": "Min. 6 caractères requis"}), 400
 
-    name     = f"{active_owner['firstName']} {active_owner['lastName']}"
-    slug     = _re.sub(r"[^a-z0-9]", "_", active_owner["firstName"].lower())
-    csv_path = f"data/naali_base_{slug}.csv"
-
+    name = f"{active_owner['firstName']} {active_owner['lastName']}"
     profile = {
         "owner_id":  owner_id,
         "name":      name,
         "email":     email,
-        "csv_path":  csv_path,
         "home_lat":  None,
         "home_lon":  None,
         "home_city": "",
     }
-    _db.upsert_user(owner_id, name, email, csv_path)
+    _db.upsert_user(owner_id, name, email)
     _db.set_password(owner_id, password)
     PROFILES[owner_id] = profile
 
@@ -1039,22 +1025,16 @@ def api_profiles_create():
     if not owner_id.isdigit():
         return jsonify({"error": "owner_id doit être numérique"}), 400
 
-    # Nom de fichier CSV dérivé du prénom (slug simple)
-    import re
-    slug = re.sub(r"[^a-z0-9]", "_", name.split()[0].lower())
-    csv_path = f"data/naali_base_{slug}.csv"
-
     profile = {
         "owner_id":  owner_id,
         "name":      name,
         "email":     email,
-        "csv_path":  csv_path,
         "home_lat":  None,
         "home_lon":  None,
         "home_city": home_city,
     }
 
-    _db.upsert_user(owner_id, name, email, csv_path, None, None, home_city)
+    _db.upsert_user(owner_id, name, email, home_city=home_city)
     PROFILES[owner_id] = profile
 
     return jsonify({"ok": True, "profile": profile})
@@ -1897,12 +1877,12 @@ if __name__ == "__main__":
         profile_module = f"config_{args.profile}"
         try:
             overrides = importlib.import_module(profile_module)
-            for key in ["HUBSPOT_OWNER_ID", "OWNER_NAME", "CSV_PATH", "HOME_LAT", "HOME_LON", "HOME_CITY"]:
+            for key in ["HUBSPOT_OWNER_ID", "OWNER_NAME", "HOME_LAT", "HOME_LON", "HOME_CITY"]:
                 if hasattr(overrides, key):
                     setattr(cfg, key, getattr(overrides, key))
             # Recharger les variables dans le module courant
-            from config import HUBSPOT_OWNER_ID, OWNER_NAME, CSV_PATH, HOME_LAT, HOME_LON
-            print(f"[PROFIL] {cfg.OWNER_NAME} — CSV: {cfg.CSV_PATH}")
+            from config import HUBSPOT_OWNER_ID, OWNER_NAME, HOME_LAT, HOME_LON
+            print(f"[PROFIL] {cfg.OWNER_NAME} — owner: {cfg.HUBSPOT_OWNER_ID}")
         except ModuleNotFoundError:
             print(f"[ERREUR] Profil '{args.profile}' introuvable (config_{args.profile}.py manquant)")
             sys.exit(1)

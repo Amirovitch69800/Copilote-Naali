@@ -152,7 +152,8 @@ def get_users() -> dict:
 
 
 def upsert_user(owner_id: str, name: str, email: str,
-                csv_path: str = "", home_lat=None, home_lon=None, home_city: str = ""):
+                csv_path: str = "", home_lat=None, home_lon=None, home_city: str = "",
+                **_kwargs):
     with _conn() as con:
         con.execute("""
             INSERT INTO users (owner_id, name, email, csv_path, home_lat, home_lon, home_city)
