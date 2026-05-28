@@ -239,9 +239,19 @@ def require_login():
     endpoint = request.endpoint
     if endpoint is None or endpoint in _PUBLIC_ENDPOINTS:
         return
-    if "owner_id" not in session:
+    oid = session.get("owner_id")
+    if not oid:
         if request.path.startswith("/api/") or request.is_json:
             return jsonify({"error": "Non authentifié", "redirect": "/login"}), 401
+        return redirect(url_for("login"))
+    # Si le profil a disparu de la mémoire (redémarrage app), recharger depuis DB
+    if oid not in PROFILES:
+        PROFILES.update(_db.get_users())
+    # Si toujours introuvable → session invalide, renvoyer au login
+    if oid not in PROFILES:
+        session.clear()
+        if request.path.startswith("/api/") or request.is_json:
+            return jsonify({"error": "Session expirée", "redirect": "/login"}), 401
         return redirect(url_for("login"))
 
 # Cache nom du commercial — isolé par owner_id
