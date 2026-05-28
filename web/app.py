@@ -173,6 +173,10 @@ def api_login_set_password():
     password = data.get("password", "")
     if owner_id not in PROFILES:
         return jsonify({"error": "Profil introuvable"}), 400
+    # Si une session existe, seul l'utilisateur connecté peut définir son propre mot de passe
+    current_session = session.get("owner_id")
+    if current_session and current_session != owner_id:
+        return jsonify({"error": "Non autorisé"}), 403
     if len(password) < 6:
         return jsonify({"error": "Min. 6 caractères requis"}), 400
     _db.set_password(owner_id, password)
@@ -184,17 +188,37 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
-# ICS stocké en mémoire pour téléchargement
-_ics_buffer: dict = {}
+# ---------------------------------------------------------------------------
+# Auth middleware — protège toutes les routes sauf login/logout/api-login
+# ---------------------------------------------------------------------------
 
-# Cache nom du commercial (chargé une fois au démarrage)
+_PUBLIC_ENDPOINTS = frozenset({
+    "login", "logout", "static",
+    "api_login_check", "api_login_authenticate", "api_login_set_password",
+})
+
+@app.before_request
+def require_login():
+    """Redirige vers /login si aucune session active (sauf routes publiques)."""
+    if DEMO_MODE:
+        return
+    endpoint = request.endpoint
+    if endpoint is None or endpoint in _PUBLIC_ENDPOINTS:
+        return
+    if "owner_id" not in session:
+        if request.path.startswith("/api/") or request.is_json:
+            return jsonify({"error": "Non authentifié", "redirect": "/login"}), 401
+        return redirect(url_for("login"))
+
+# Cache nom du commercial — isolé par owner_id
 _owner_name_cache: dict = {}
 
 def _get_owner_name() -> str:
-    if "name" not in _owner_name_cache:
+    oid = _owner_id()
+    if oid not in _owner_name_cache:
         from hubspot.suivi import get_owner_name
-        _owner_name_cache["name"] = get_owner_name(HUBSPOT_OWNER_ID)
-    return _owner_name_cache["name"]
+        _owner_name_cache[oid] = get_owner_name(oid)
+    return _owner_name_cache[oid]
 
 # ---------------------------------------------------------------------------
 # Route principale
@@ -266,8 +290,6 @@ def api_today():
         ca_objectif = sum(float(p.get("ca_2025") or p.get("ca") or 0) for p in filter_clients(pharmacies))
     except Exception:
         pass
-
-    today_str = date.today().isoformat()
 
     # Offres actives pertinentes pour les visites du jour
     offres_jour = []
@@ -655,10 +677,6 @@ def api_creer():
                     created_indices.append(i)
         except Exception:
             pass
-
-    # Générer le .ics avec les IDs HubSpot réels
-    ics_bytes = generer_ics(visites, hubspot_ids)
-    _ics_buffer["content"] = ics_bytes
 
     # Invalider le cache Python pour que le prochain fetch soit frais
     try:

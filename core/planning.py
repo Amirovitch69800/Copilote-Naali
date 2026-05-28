@@ -13,8 +13,7 @@ DUREES  = {"VC": 30, "VP": 30, "RC": 60, "RP": 60, "F": 60}
 def _parse_heure(d: date_type, heure_str: str) -> datetime:
     """Convertit 'HH:MM' en datetime Paris-aware pour la date donnée."""
     h, m = map(int, heure_str.split(":"))
-    dt = datetime(d.year, d.month, d.day, h, m, tzinfo=PARIS)
-    return dt
+    return PARIS.localize(datetime(d.year, d.month, d.day, h, m))
 
 
 def _type_visite(pharmacie: dict) -> str:
