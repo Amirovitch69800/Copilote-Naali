@@ -145,7 +145,13 @@ def login():
     if DEMO_MODE:
         session["owner_id"] = _DEMO_OWNER
         return redirect(url_for("copilote"))
-    return render_template("login.html", profiles=list(PROFILES.values()))
+    available_owners = [
+        {"id": o["id"], "name": f"{o['firstName']} {o['lastName']}"}
+        for o in _db.ACTIVE_OWNERS
+        if o["id"] not in PROFILES
+    ]
+    return render_template("login.html", profiles=list(PROFILES.values()),
+                           available_owners=available_owners)
 
 @app.route("/api/login/check", methods=["POST"])
 def api_login_check():
@@ -184,6 +190,46 @@ def api_login_set_password():
     session["owner_id"] = owner_id
     return jsonify({"ok": True, "redirect": url_for("index")})
 
+@app.route("/api/register", methods=["POST"])
+def api_register():
+    """Création de compte — accessible sans authentification."""
+    import re as _re
+    data     = request.json or {}
+    owner_id = str(data.get("owner_id", "")).strip()
+    email    = str(data.get("email", "")).strip().lower()
+    password = str(data.get("password", ""))
+
+    active_owner = next((o for o in _db.ACTIVE_OWNERS if o["id"] == owner_id), None)
+    if not active_owner:
+        return jsonify({"error": "Commercial introuvable"}), 400
+    if owner_id in PROFILES:
+        return jsonify({"error": "Ce compte existe déjà, connectez-vous"}), 400
+    if not email or "@" not in email:
+        return jsonify({"error": "Email invalide"}), 400
+    if len(password) < 6:
+        return jsonify({"error": "Min. 6 caractères requis"}), 400
+
+    name     = f"{active_owner['firstName']} {active_owner['lastName']}"
+    slug     = _re.sub(r"[^a-z0-9]", "_", active_owner["firstName"].lower())
+    csv_path = f"data/naali_base_{slug}.csv"
+
+    profile = {
+        "owner_id":  owner_id,
+        "name":      name,
+        "email":     email,
+        "csv_path":  csv_path,
+        "home_lat":  None,
+        "home_lon":  None,
+        "home_city": "",
+    }
+    _db.upsert_user(owner_id, name, email, csv_path)
+    _db.set_password(owner_id, password)
+    PROFILES[owner_id] = profile
+
+    session.clear()
+    session["owner_id"] = owner_id
+    return jsonify({"ok": True, "redirect": url_for("index")})
+
 @app.route("/logout")
 def logout():
     session.clear()
@@ -196,6 +242,7 @@ def logout():
 _PUBLIC_ENDPOINTS = frozenset({
     "login", "logout", "static",
     "api_login_check", "api_login_authenticate", "api_login_set_password",
+    "api_register",
 })
 
 @app.before_request
