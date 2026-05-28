@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <script>if(new URLSearchParams(location.search).get('embed')==='1')document.documentElement.classList.add('embed');</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard — Amir Ounissi | Naali</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:         #faf8f5;
+      --sidebar:    #111111;
+      --surface:    #ffffff;
+      --surface2:   #f7f5f2;
+      --border:     #ede9e3;
+      --accent:     #f97316;
+      --accent-dim: rgba(249,115,22,.12);
+      --accent-light: #fff7ed;
+      --text:       #1a1612;
+      --text-dim:   #4a4540;
+      --text-muted: #8a8580;
+      --green:  #16a34a; --green-bg:  #f0fdf4; --green-bd:  #bbf7d0;
+      --amber:  #d97706; --amber-bg:  #fffbeb; --amber-bd:  #fde68a;
+      --red:    #dc2626; --red-bg:    #fef2f2; --red-bd:    #fecaca;
+      --blue:   #2563eb; --blue-bg:   #eff6ff; --blue-bd:   #bfdbfe;
+      --shadow: 0 1px 3px rgba(26,22,18,.05), 0 4px 16px rgba(26,22,18,.06);
+      --shadow-sm: 0 1px 2px rgba(26,22,18,.04);
+      --font-display: 'DM Serif Display', Georgia, serif;
+      --r-lg: 12px; --r-xl: 16px; --r-2xl: 20px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg); color: var(--text);
+      display: grid; grid-template-columns: 240px 1fr;
+      min-height: 100vh; font-size: 14px; line-height: 1.5;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      background: var(--sidebar); color: #fff;
+      padding: 20px 16px; position: sticky; top: 0; height: 100vh;
+      overflow-y: auto; display: flex; flex-direction: column; gap: 16px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-logo {
+      width: 34px; height: 34px; background: var(--accent); border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; color: #fff; flex-shrink: 0;
+    }
+    .brand-name { font-size: 17px; font-weight: 700; color: var(--accent); }
+    .brand-sub  { font-size: 10px; color: #555; }
+    .profile-card { background: #1c1c1c; border-radius: 12px; padding: 12px; }
+    .profile-top { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+    .avatar {
+      width: 36px; height: 36px; background: var(--accent); border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 11px; flex-shrink: 0;
+    }
+    .profile-name { font-size: 12px; font-weight: 600; }
+    .profile-zone { font-size: 10px; color: #666; }
+    .profile-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+    .pstat { background: #262626; border-radius: 8px; padding: 7px 9px; }
+    .pstat-label { font-size: 10px; color: #555; }
+    .pstat-value { font-size: 15px; font-weight: 700; color: #fff; margin-top: 1px; }
+    .nav-label { font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 2px; }
+    .nav-link {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 9px; border-radius: 7px;
+      font-size: 12px; font-weight: 500; color: #777;
+      text-decoration: none; transition: all .12s;
+    }
+    .nav-link:hover  { background: #1c1c1c; color: #fff; }
+    .nav-link.active { background: var(--accent-dim); color: var(--accent); }
+    .sidebar-footer  { margin-top: auto; font-size: 10px; color: #2a2a2a; }
+
+    /* ── Main ── */
+    .main { padding: 24px 28px; display: flex; flex-direction: column; gap: 18px; }
+
+    /* ── Header + filter bar ── */
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .page-title  { font-size: 22px; font-weight: 400; font-family: var(--font-display); letter-spacing: -.01em; }
+    .page-sub    { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+    .filter-bar  { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .filter-btn  {
+      padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface); font-size: 12px; font-weight: 600;
+      color: var(--text-dim); cursor: pointer; transition: all .12s;
+      font-family: inherit;
+    }
+    .filter-btn:hover         { border-color: var(--accent); color: var(--accent); }
+    .filter-btn.active        { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .filter-sep               { width: 1px; height: 24px; background: var(--border); margin: 0 2px; }
+    .com-bar { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+    .com-btn {
+      padding: 5px 11px; border-radius: 20px; border: 1px solid var(--border);
+      background: var(--surface); font-size: 11px; font-weight: 600;
+      color: var(--text-dim); cursor: pointer; transition: all .12s; font-family: inherit;
+    }
+    .com-btn:hover  { border-color: var(--accent); color: var(--accent); }
+    .com-btn.active { background: var(--sidebar); color: #fff; border-color: var(--sidebar); }
+    .agent-wrap { position: relative; display: inline-block; }
+    .agent-dropdown {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0; z-index: 200;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.12); min-width: 180px; max-height: 280px;
+      overflow-y: auto; padding: 4px 0;
+    }
+    .agent-dropdown.show { display: block; }
+    .agent-dropdown button {
+      display: block; width: 100%; text-align: left; padding: 6px 14px;
+      background: none; border: none; font-size: 11px; font-weight: 600;
+      color: var(--text-dim); cursor: pointer; font-family: inherit;
+    }
+    .agent-dropdown button:hover { background: var(--bg); color: var(--accent); }
+    .agent-dropdown button.active { color: var(--sidebar); }
+    .custom-range             { display: none; align-items: center; gap: 6px; }
+    .custom-range.show        { display: flex; }
+    .custom-range input[type="date"] {
+      padding: 5px 8px; border-radius: 7px; border: 1px solid var(--border);
+      font-size: 12px; font-family: inherit; background: var(--surface);
+      color: var(--text); outline: none;
+    }
+    .custom-range input[type="date"]:focus { border-color: var(--accent); }
+    .btn-apply {
+      padding: 5px 10px; border-radius: 7px; border: none;
+      background: var(--accent); color: #fff; font-size: 12px; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface); border-radius: var(--r-2xl);
+      border: 1px solid var(--border); padding: 20px 22px;
+      box-shadow: var(--shadow);
+    }
+    .card-title { font-size: 15px; font-weight: 400; font-family: var(--font-display); letter-spacing: -.01em; margin-bottom: 2px; }
+    .card-sub   { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+
+    /* ── KPI Grid ── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+    .kpi-card { background: var(--surface); border-radius: var(--r-2xl); border: 1px solid var(--border); padding: 18px 20px; box-shadow: var(--shadow-sm); }
+    .kpi-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .kpi-label  { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; }
+    .kpi-value  { font-size: 26px; font-weight: 700; line-height: 1.1; margin-bottom: 6px; letter-spacing: -.02em; }
+    .kpi-sub    { font-size: 11px; color: var(--text-muted); margin-bottom: 7px; min-height: 16px; }
+    .progress-bar  { height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 99px; transition: width .5s ease; }
+    .fill-green  { background: var(--green); }
+    .fill-amber  { background: var(--amber); }
+    .fill-red    { background: var(--red); }
+    .fill-accent { background: var(--accent); }
+    .fill-blue   { background: var(--blue); }
+
+    .badge {
+      font-size: 10px; font-weight: 700; padding: 2px 7px;
+      border-radius: 20px; white-space: nowrap;
+    }
+    .badge-green  { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-bd); }
+    .badge-amber  { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-bd); }
+    .badge-red    { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-bd); }
+    .badge-blue   { background: var(--blue-bg);   color: var(--blue);   border: 1px solid var(--blue-bd); }
+    .badge-orange { background: var(--accent-dim); color: var(--accent); }
+    .badge-gray   { background: #f5f5f5; color: #555; }
+
+    /* ── Comparatif ── */
+    .chart-wrap { position: relative; }
+
+    /* ── DN Section ── */
+    .dn-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; }
+    .dn-stat-card {
+      background: var(--surface); border-radius: 14px; border: 1px solid var(--border);
+      padding: 16px 18px; text-align: center;
+    }
+    .dn-stat-val   { font-size: 28px; font-weight: 700; margin-bottom: 2px; }
+    .dn-stat-label { font-size: 11px; color: var(--text-muted); }
+
+    .dn-table-wrap { overflow-x: auto; }
+    .dn-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .dn-table thead th {
+      font-size: 10px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .06em;
+      padding: 0 10px 8px; border-bottom: 1px solid var(--border);
+      text-align: center; white-space: nowrap;
+    }
+    .dn-table thead th:first-child { text-align: left; }
+    .dn-table tbody tr { transition: background .1s; }
+    .dn-table tbody tr:hover { background: #fafafa; }
+    .dn-table tbody td { padding: 9px 10px; border-bottom: 1px solid #f5f5f5; vertical-align: middle; }
+    .dn-table tbody tr:last-child td { border-bottom: none; }
+    .dn-table .col-prod { font-weight: 600; white-space: nowrap; }
+    .dn-table .col-pct  { text-align: center; font-weight: 700; font-size: 13px; }
+    .dn-table .col-seg  { text-align: center; font-size: 12px; }
+    .dn-table .col-bar  { min-width: 90px; }
+
+    .bar-inline { height: 6px; background: #f0f0f0; border-radius: 99px; overflow: hidden; margin-top: 3px; }
+    .bar-inline-fill { height: 100%; border-radius: 99px; }
+
+    .pct-green { color: var(--green); }
+    .pct-amber { color: var(--amber); }
+    .pct-red   { color: var(--red); }
+    .row-green { background: rgba(22,163,74,.04); }
+    .row-amber { background: rgba(217,119,6,.04); }
+    .row-red   { background: rgba(220,38,38,.04); }
+
+    .dn-seg-cell { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+    .dn-seg-pct  { font-weight: 700; }
+    .dn-seg-nb   { font-size: 10px; color: var(--text-muted); }
+    .dn-delta { text-align: center; font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .dn-delta-label { font-size: 9px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 1px; }
+    .dn-seg-btn { padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; }
+    .dn-seg-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .dn-seg-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ── Bottom row ── */
+    .bottom-row { display: grid; grid-template-columns: 280px 1fr; gap: 12px; }
+    .donut-wrap { position: relative; height: 160px; }
+    .donut-center {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      text-align: center; pointer-events: none;
+    }
+    .donut-center-val { font-size: 20px; font-weight: 700; }
+    .donut-center-lbl { font-size: 10px; color: var(--text-muted); }
+    .legend-list { display: flex; flex-direction: column; gap: 7px; margin-top: 14px; }
+    .legend-row  { display: flex; align-items: center; justify-content: space-between; }
+    .legend-dot  { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .legend-lbl  { font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 6px; }
+    .legend-val  { font-size: 13px; font-weight: 700; }
+
+    /* ── Table commandes ── */
+    table.cmd-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    table.cmd-table thead th {
+      font-size: 10px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .06em;
+      padding: 0 10px 8px; border-bottom: 1px solid var(--border); text-align: left;
+    }
+    table.cmd-table thead th.r { text-align: right; }
+    table.cmd-table tbody tr:hover { background: #fafafa; }
+    table.cmd-table tbody td { padding: 9px 10px; border-bottom: 1px solid #f5f5f5; vertical-align: middle; }
+    table.cmd-table tbody tr:last-child td { border-bottom: none; }
+    .deal-link { color: var(--text); text-decoration: none; font-weight: 600; }
+    .deal-link:hover { color: var(--accent); }
+    .deal-name { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+    .chip { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+    .chip-implant  { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-bd); }
+    .chip-reassort { background: #f5f5f5; color: #555; }
+    .chip-closed   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-bd); }
+    .chip-stage    { background: var(--blue-bg);   color: var(--blue);   border: 1px solid var(--blue-bd); }
+    .amount-r { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    /* ── Bouton refresh section ── */
+    .btn-refresh-sm {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; border-radius: 7px;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text-muted); cursor: pointer; font-size: 13px;
+      transition: all .12s; flex-shrink: 0; line-height: 1;
+    }
+    .btn-refresh-sm:hover    { border-color: var(--accent); color: var(--accent); }
+    .btn-refresh-sm:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-refresh-sm.spinning { animation: spin .6s linear infinite; border-top-color: var(--accent); }
+
+    /* ── Loading ── */
+    .loading-box {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 40px; color: var(--text-muted); font-size: 13px;
+    }
+    .spinner-sm {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 2px solid #e5e5e5; border-top-color: var(--accent);
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-state { text-align: center; padding: 28px; color: var(--text-muted); font-size: 12px; }
+
+    /* ── Spinner refresh ── */
+    .btn-refresh {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 8px; padding: 7px 13px;
+      font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+      transition: opacity .15s;
+    }
+    .btn-refresh:hover    { opacity: .85; }
+    .btn-refresh:disabled { opacity: .5; cursor: not-allowed; }
+    .spin-btn {
+      display: none; width: 13px; height: 13px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+      animation: spin .6s linear infinite;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1100px) {
+      .kpi-grid    { grid-template-columns: repeat(2, 1fr); }
+      .bottom-row  { grid-template-columns: 1fr; }
+      .dn-summary  { grid-template-columns: 1fr 1fr 1fr; }
+    }
+    @media (max-width: 860px) {
+      body { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; flex-direction: row; flex-wrap: wrap; }
+    }
+
+  /* ── Mode embed (iframe copilote) ── */
+  html.embed body { grid-template-columns: 1fr; }
+  html.embed .sidebar { display: none !important; }
+
+  /* ── Print / Rapport PDF ── */
+  @media print {
+    body { display: block !important; background: #fff !important; font-size: 11px; }
+    .sidebar, .com-bar, .filter-bar, .page-header .btn-refresh,
+    button[onclick="generateReport()"], #custom-range, #agent-dropdown { display: none !important; }
+    main { padding: 0 !important; }
+    .page-header { border-bottom: 2px solid #f97316; margin-bottom: 16px; padding-bottom: 10px; }
+    #print-report { display: block !important; }
+    .kpi-grid, .bottom-row, #comparatif-wrap, #comparatif-loading,
+    #dn-summary, #dn-seg-filters { display: none !important; }
+    .card { box-shadow: none !important; border: 1px solid #e5e5e5 !important; page-break-inside: avoid; }
+    .rpt-section { margin-bottom: 20px; }
+    .rpt-title { font-size: 13px; font-weight: 700; color: #f97316; border-bottom: 1px solid #f0f0f0; padding-bottom: 6px; margin-bottom: 10px; }
+    .rpt-kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .rpt-kpi-box { border: 1px solid #e5e5e5; border-radius: 8px; padding: 10px 12px; }
+    .rpt-kpi-val { font-size: 18px; font-weight: 700; color: #171717; }
+    .rpt-kpi-lbl { font-size: 10px; color: #737373; margin-top: 2px; }
+    .rpt-kpi-sub { font-size: 10px; color: #525252; margin-top: 4px; }
+    .rpt-dn-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .rpt-dn-table th { background: #f5f5f5; padding: 5px 8px; text-align: left; font-weight: 700; font-size: 10px; }
+    .rpt-dn-table td { padding: 5px 8px; border-bottom: 1px solid #f0f0f0; }
+    .rpt-dn-table tr:nth-child(even) td { background: #fafafa; }
+    .rpt-footer { font-size: 9px; color: #aaa; text-align: right; margin-top: 20px; }
+    .rpt-green { color: #16a34a; font-weight: 600; }
+    .rpt-amber { color: #d97706; font-weight: 600; }
+    .rpt-red   { color: #dc2626; font-weight: 600; }
+    .rpt-bar-wrap { height: 6px; background: #f0f0f0; border-radius: 3px; margin-top: 3px; }
+    .rpt-bar-fill { height: 6px; border-radius: 3px; }
+  }
+  #print-report { display: none; }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-logo">N</div>
+    <div>
+      <div class="brand-name">Naali</div>
+      <div class="brand-sub">Dashboard commercial</div>
+    </div>
+  </div>
+
+  <div class="profile-card">
+    <div class="profile-top">
+      <div class="avatar">AO</div>
+      <div>
+        <div class="profile-name">Amir Ounissi</div>
+        <div class="profile-zone">Sud France · 11 depts</div>
+      </div>
+    </div>
+    <div class="profile-stats">
+      <div class="pstat">
+        <div class="pstat-label">Clients</div>
+        <div class="pstat-value" id="sb-clients">{{ nb_clients }}</div>
+      </div>
+      <div class="pstat">
+        <div class="pstat-label">Prospects</div>
+        <div class="pstat-value" id="sb-prospects">{{ nb_prospects }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="nav-label">Navigation</div>
+    <a href="/"                    class="nav-link active">&#9632; Dashboard</a>
+    <a href="http://localhost:5001" class="nav-link" target="_blank">&#9679; Planner Naali</a>
+    <a href="https://app.hubspot.com/contacts/{{ hub_id }}/deals" class="nav-link" target="_blank">&#9675; HubSpot Deals</a>
+  </div>
+
+  <div class="sidebar-footer" id="sb-footer">{{ updated_at }}</div>
+</aside>
+
+<!-- ── Main ── -->
+<main class="main">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <div class="page-title">Performance — <span id="hdr-period">{{ mois_label }}</span></div>
+      <div class="page-sub">Live HubSpot · owner 727665403 · <span id="hdr-range">{{ debut }} → {{ fin }}</span></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <button class="btn-refresh" id="btn-refresh" onclick="triggerRefresh()">
+        <div class="spin-btn" id="spin-btn"></div>
+        <span id="btn-lbl">Actualiser</span>
+      </button>
+      <button class="btn-refresh" onclick="generateReport()" style="background:var(--accent);color:#fff;border-color:var(--accent);">
+        ⬇ Rapport PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- Sélecteur commercial — masqué : chaque commercial voit uniquement ses données -->
+  <div class="com-bar" id="com-bar" style="display:none !important">
+    <span style="font-size:11px;color:var(--text-muted);font-weight:600;">Commercial :</span>
+    <button class="com-btn active" onclick="setCommercial('727665403', this)">Amir Ounissi</button>
+    <button class="com-btn" onclick="setCommercial('78146570', this)">Icham Benaissa</button>
+    <button class="com-btn" onclick="setCommercial('32059428', this)">Fatima Brahim</button>
+    <button class="com-btn" onclick="setCommercial('30058900', this)">Emelyne Lahaies</button>
+    <button class="com-btn" onclick="setCommercial('32320882', this)">Jérémy Le Feur</button>
+    <button class="com-btn" onclick="setCommercial('33361505', this)">Lamia Chabane</button>
+    <div class="agent-wrap">
+      <button class="com-btn" id="btn-agents" onclick="toggleAgentMenu(this)">Agents Naali &#9660;</button>
+      <div class="agent-dropdown" id="agent-dropdown">
+        <button onclick="setAgent('all', this)">Tous les agents</button>
+        {% for oid, info in agents.items() | sort(attribute='1.name') %}
+        <button onclick="setAgent('{{ oid }}', this)">{{ info.name }}</button>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="setPreset('this_month', this)">Ce mois</button>
+    <button class="filter-btn" onclick="setPreset('last_month', this)">Mois préc.</button>
+    <div class="filter-sep"></div>
+    <button class="filter-btn" onclick="setPreset('t1_2026', this)">T1 2026</button>
+    <button class="filter-btn" onclick="setPreset('t2_2026', this)">T2 2026</button>
+    <div class="filter-sep"></div>
+    <button class="filter-btn" onclick="setPreset('full_2025', this)">2025 complet</button>
+    <button class="filter-btn" onclick="setPreset('ytd_2026', this)">2026 YTD</button>
+    <div class="filter-sep"></div>
+    <button class="filter-btn" id="btn-custom" onclick="toggleCustom()">Personnalisé ▾</button>
+    <div class="custom-range" id="custom-range">
+      <input type="date" id="date-debut" value="{{ debut }}">
+      <span style="color:var(--text-muted);font-size:12px;">→</span>
+      <input type="date" id="date-fin" value="{{ fin }}">
+      <button class="btn-apply" onclick="applyCustom()">OK</button>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid" id="kpi-section">
+
+    <!-- CA période -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">CA période</span>
+        <span class="badge" id="badge-ca" style="display:none"></span>
+      </div>
+      <div class="kpi-value" id="kpi-ca">{{ ca | euros }}</div>
+      <div class="kpi-sub"   id="kpi-ca-sub">
+        {% if objectif_ca > 0 %}Objectif : <strong>{{ objectif_ca | euros }}</strong>{% endif %}
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill {% if pct_ca %}{% if pct_ca >= 100 %}fill-green{% elif pct_ca >= 70 %}fill-amber{% else %}fill-red{% endif %}{% else %}fill-accent{% endif %}"
+             id="prog-ca" style="width:{% if pct_ca %}{{ pct_ca }}{% else %}100{% endif %}%"></div>
+      </div>
+    </div>
+
+    <!-- R/O Commercial -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">R/O <span id="kpi-ro-com-label">{{ commerciaux[owner_id]['name'].split()[0] if owner_id in commerciaux else 'Commercial' }}</span></span>
+      </div>
+      <div class="kpi-value" id="kpi-ro-com">{% if ro_commercial is not none %}{{ ro_commercial }}&thinsp;%{% else %}—{% endif %}</div>
+      <div class="kpi-sub" id="kpi-ro-com-sub">{% if objectif_ca > 0 %}Objectif&nbsp;: <strong>{{ objectif_ca | euros }}</strong>{% else %}Pas d'objectif défini{% endif %}</div>
+      <div class="progress-bar">
+        <div class="progress-fill {% if ro_commercial is not none %}{% if ro_commercial >= 100 %}fill-green{% elif ro_commercial >= 75 %}fill-amber{% else %}fill-red{% endif %}{% else %}fill-accent{% endif %}"
+             id="prog-ro-com" style="width:{% if ro_commercial is not none %}{{ [ro_commercial, 100] | min }}{% else %}0{% endif %}%"></div>
+      </div>
+    </div>
+
+    <!-- R/O Équipe -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">R/O Équipe</span>
+      </div>
+      <div class="kpi-value" id="kpi-ro-eq">…</div>
+      <div class="kpi-sub" id="kpi-ro-eq-sub">Moyenne équipe Naali</div>
+      <div class="progress-bar">
+        <div class="progress-fill fill-accent" id="prog-ro-eq" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Implantations -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Implantations</span>
+        <span class="badge" id="badge-implant" style="display:none"></span>
+      </div>
+      <div class="kpi-value" id="kpi-implant">{{ implantations }}</div>
+      <div class="kpi-sub"   id="kpi-implant-sub">
+        {% if objectif_implant > 0 %}Objectif : <strong>{{ objectif_implant }}</strong>{% endif %}
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill {% if pct_implant %}{% if pct_implant >= 100 %}fill-green{% elif pct_implant >= 60 %}fill-amber{% else %}fill-red{% endif %}{% else %}fill-accent{% endif %}"
+             id="prog-implant" style="width:{% if pct_implant %}{{ pct_implant }}{% else %}100{% endif %}%"></div>
+      </div>
+    </div>
+
+    <!-- Points / jour travaillé -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Pts de visite / jour terrain</span>
+        <span class="badge badge-blue">Terrain</span>
+      </div>
+      <div class="kpi-value" id="kpi-pts-jour">—</div>
+      <div class="kpi-sub" id="kpi-pts-jour-sub">—</div>
+      <div class="progress-bar">
+        <div class="progress-fill fill-blue" id="prog-pts-jour" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- CA moyen / commande -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">CA moyen / commande</span>
+        <span class="badge badge-orange">Terrain</span>
+      </div>
+      <div class="kpi-value" id="kpi-ca-cmd">—</div>
+      <div class="kpi-sub" id="kpi-ca-cmd-sub">—</div>
+      <div class="progress-bar">
+        <div class="progress-fill fill-accent" style="width:100%"></div>
+      </div>
+    </div>
+
+    <!-- Précommandes -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Précommandes</span>
+      </div>
+      <div class="kpi-value" id="kpi-precom">{{ precommandes.nb if precommandes else '—' }}</div>
+      <div class="kpi-sub" id="kpi-precom-sub">{% if precommandes and precommandes.montant > 0 %}{{ precommandes.montant | euros }} en attente{% else %}Aucune en attente{% endif %}</div>
+      <div class="progress-bar">
+        <div class="progress-fill fill-amber" id="prog-precom" style="width:100%"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Comparatif 2025 vs 2026 -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+      <div class="card-title">CA mensuel — comparatif 2025 vs 2026</div>
+      <button class="btn-refresh-sm" id="btn-refresh-comparatif" onclick="refreshSection('comparatif')" title="Actualiser">↺</button>
+    </div>
+    <div class="card-sub">Deals clôturés (closedate) par mois — mois futurs 2026 masqués</div>
+    <div id="comparatif-loading" class="loading-box">
+      <div class="spinner-sm"></div> Chargement 24 mois en parallèle…
+    </div>
+    <div class="chart-wrap" style="height:220px;display:none;" id="comparatif-wrap">
+      <canvas id="chartComparatif"></canvas>
+    </div>
+  </div>
+
+  <!-- DN Produit -->
+  <div>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;flex-wrap:wrap;">
+      <div style="font-size:18px;font-weight:400;font-family:var(--font-display);letter-spacing:-.01em;">Distribution Numérique — 12 références actives</div>
+      <button class="btn-refresh-sm" id="btn-refresh-dn" onclick="refreshSection('dn')" title="Actualiser">↺</button>
+      <div id="dn-seg-filters" style="display:none;gap:6px;flex-wrap:wrap;">
+        <button class="dn-seg-btn active" onclick="setDNSegFilter('Tous',this)">Tous</button>
+        <button class="dn-seg-btn" onclick="setDNSegFilter('Prioritaires',this)">Prioritaires</button>
+        <button class="dn-seg-btn" onclick="setDNSegFilter('Secondaires',this)">Secondaires</button>
+        <button class="dn-seg-btn" onclick="setDNSegFilter('Non Prioritaires',this)">Non Prioritaires</button>
+      </div>
+    </div>
+
+    <!-- DN Summary cards -->
+    <div class="dn-summary" id="dn-summary">
+      <div class="dn-stat-card">
+        <div class="dn-stat-val" id="dn-cat-moy" style="color:var(--accent)">—</div>
+        <div class="dn-stat-label">DN catalogue moyenne</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">réfs moyennes / 12 par pharmacie</div>
+      </div>
+      <div class="dn-stat-card">
+        <div class="dn-stat-val" id="dn-faibles" style="color:var(--red)">—</div>
+        <div class="dn-stat-label">Pharmacies &lt; 50%</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">moins de 6 références sur 12</div>
+      </div>
+      <div class="dn-stat-card">
+        <div class="dn-stat-val" id="dn-forts" style="color:var(--green)">—</div>
+        <div class="dn-stat-label">Pharmacies ≥ 75%</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">9 références ou plus sur 12</div>
+      </div>
+    </div>
+
+    <!-- DN Table -->
+    <div class="card">
+      <div class="card-title">DN par produit</div>
+      <div class="card-sub">Trié par DN globale croissante · opportunités en haut · clients uniquement</div>
+      <div id="dn-loading" class="loading-box">
+        <div class="spinner-sm"></div> Analyse en cours — récupération des catalogues clients…
+      </div>
+      <div class="dn-table-wrap" id="dn-table-wrap" style="display:none;">
+        <table class="dn-table">
+          <thead>
+            <tr>
+              <th style="text-align:left;min-width:200px;cursor:pointer;" onclick="sortDN('produit')" id="th-produit">Référence</th>
+              <th style="min-width:110px;cursor:pointer;" onclick="sortDN('pct')" id="th-pct">DN <span id="dn-th-label">Globale</span> <span id="sort-icon-pct">▲</span></th>
+              <th style="min-width:70px;text-align:center;">VS Naali</th>
+              <th style="min-width:70px;text-align:center;">VS Agents</th>
+            </tr>
+          </thead>
+          <tbody id="dn-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- DN par segment -->
+      <div id="dn-segments" style="display:none;margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">
+          DN catalogue par segment
+        </div>
+        <div id="dn-seg-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom row : portefeuille + commandes -->
+  <div class="bottom-row">
+
+    <!-- Portefeuille -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+        <div class="card-title">Portefeuille</div>
+        <button class="btn-refresh-sm" id="btn-refresh-portef" onclick="refreshSection('portef')" title="Actualiser">↺</button>
+      </div>
+      <div class="card-sub">Clients vs prospects</div>
+      <div class="donut-wrap">
+        <canvas id="chartPortef"></canvas>
+        <div class="donut-center">
+          <div class="donut-center-val" id="donut-total">{{ nb_clients + nb_prospects }}</div>
+          <div class="donut-center-lbl">pharmacies</div>
+        </div>
+      </div>
+      <div class="legend-list">
+        <div class="legend-row">
+          <div class="legend-lbl"><div class="legend-dot" style="background:#16a34a"></div>Clients</div>
+          <div class="legend-val" id="leg-clients">{{ nb_clients }}</div>
+        </div>
+        <div class="legend-row">
+          <div class="legend-lbl"><div class="legend-dot" style="background:#f97316"></div>Prospects</div>
+          <div class="legend-val" id="leg-prospects">{{ nb_prospects }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Classement clients CA 2026 -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+        <div class="card-title">Classement clients — CA 2026</div>
+        <button class="btn-refresh-sm" id="btn-refresh-clients-ca" onclick="refreshSection('clientsca')" title="Actualiser">↺</button>
+      </div>
+      <div class="card-sub">Clients actifs triés par CA décroissant · deals clôturés 2026</div>
+      <div id="clients-ca-loading" class="loading-box">
+        <div class="spinner-sm"></div> Chargement du classement…
+      </div>
+      <div id="clients-ca-wrap" style="display:none;overflow-x:auto;max-height:420px;overflow-y:auto;">
+        <table class="cmd-table">
+          <thead>
+            <tr>
+              <th style="width:32px;">#</th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortClients('nom')">Pharmacie <span id="cc-icon-nom"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortClients('ville')">Ville <span id="cc-icon-ville"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortClients('potentiel')">Segment <span id="cc-icon-potentiel"></span></th>
+              <th class="r" style="min-width:80px;cursor:pointer;user-select:none;" onclick="sortClients('dn_global')">DN Globale <span id="cc-icon-dn_global"></span></th>
+              <th class="r" style="min-width:80px;cursor:pointer;user-select:none;" onclick="sortClients('dn_5f')">DN 5 Fantastiques <span id="cc-icon-dn_5f"></span></th>
+              <th class="r" style="cursor:pointer;user-select:none;" onclick="sortClients('ca')">CA 2026 <span id="cc-icon-ca">▼</span></th>
+            </tr>
+          </thead>
+          <tbody id="clients-ca-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Rapport PDF (visible uniquement à l'impression) -->
+  <div id="print-report"></div>
+
+</main>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const HUB_ID    = "{{ hub_id }}";
+let currentDebut = "{{ debut }}";
+let currentFin   = "{{ fin }}";
+let chartComparatif = null;
+let chartPortef     = null;
+
+// ── Format helpers ─────────────────────────────────────────────────────────
+function euros(n) {
+  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n || 0);
+}
+function pct1(n) { return (n || 0).toFixed(1) + "\u202f%"; }
+
+// ── Badge helpers ──────────────────────────────────────────────────────────
+function pctBadgeClass(pct, threshHigh = 100, threshMid = 70) {
+  if (pct >= threshHigh) return "badge-green";
+  if (pct >= threshMid)  return "badge-amber";
+  return "badge-red";
+}
+function fillClass(pct, threshHigh = 100, threshMid = 70) {
+  if (pct >= threshHigh) return "fill-green";
+  if (pct >= threshMid)  return "fill-amber";
+  return "fill-red";
+}
+function dn_row_class(pct) {
+  if (pct >= 75) return "row-green";
+  if (pct >= 50) return "row-amber";
+  return "row-red";
+}
+function dn_bar_color(pct) {
+  if (pct >= 75) return "#16a34a";
+  if (pct >= 50) return "#d97706";
+  return "#dc2626";
+}
+function dn_pct_class(pct) {
+  if (pct >= 75) return "pct-green";
+  if (pct >= 50) return "pct-amber";
+  return "pct-red";
+}
+
+// ── Date utils ─────────────────────────────────────────────────────────────
+function fmtYMD(d) {
+  const y = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, "0");
+  const da = String(d.getDate()).padStart(2, "0");
+  return `${y}-${mo}-${da}`;
+}
+function getPresetDates(type) {
+  const today = new Date();
+  const y = today.getFullYear(), m = today.getMonth();
+  const lastDayOfMonth = (year, month) => new Date(year, month + 1, 0);
+  switch (type) {
+    case "this_month":
+      return [fmtYMD(new Date(y, m, 1)), fmtYMD(today)];
+    case "last_month":
+      return [fmtYMD(new Date(y, m - 1, 1)), fmtYMD(lastDayOfMonth(y, m - 1))];
+    case "t1_2026":
+      return ["2026-01-01", "2026-03-31"];
+    case "t2_2026":
+      return ["2026-04-01", "2026-06-30"];
+    case "full_2025":
+      return ["2025-01-01", "2025-12-31"];
+    case "ytd_2026":
+      return ["2026-01-01", fmtYMD(today)];
+    default:
+      return [fmtYMD(new Date(y, m, 1)), fmtYMD(today)];
+  }
+}
+
+// ── Filter UI ──────────────────────────────────────────────────────────────
+function setPreset(type, btn) {
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  document.getElementById("custom-range").classList.remove("show");
+  const [debut, fin] = getPresetDates(type);
+  loadPeriod(debut, fin);
+}
+function toggleCustom() {
+  const cr = document.getElementById("custom-range");
+  cr.classList.toggle("show");
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("btn-custom").classList.add("active");
+}
+function applyCustom() {
+  const debut = document.getElementById("date-debut").value;
+  const fin   = document.getElementById("date-fin").value;
+  if (debut && fin) loadPeriod(debut, fin);
+}
+
+// ── Commercial selector ─────────────────────────────────────────────────────
+let _currentCommercial = "{{ session_owner_id }}";
+
+let _agentMode = false;
+let _currentAgent = null;  // null = tous agents, sinon owner_id
+
+function setCommercial(ownerId, btn) {
+  _agentMode = false;
+  _currentAgent = null;
+  _currentCommercial = ownerId;
+  if (btn) _currentComName = btn.textContent.trim();
+  document.querySelectorAll(".com-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("agent-dropdown").classList.remove("show");
+  if (btn) btn.classList.add("active");
+  const lbl = document.getElementById("kpi-ro-com-label");
+  if (lbl && btn) lbl.textContent = btn.textContent.trim().split(" ")[0];
+  loadPeriod(currentDebut, currentFin);
+  loadComparatif();
+  loadDN();
+}
+
+function toggleAgentMenu(btn) {
+  const dd = document.getElementById("agent-dropdown");
+  dd.classList.toggle("show");
+  // Fermer si clic extérieur
+  if (dd.classList.contains("show")) {
+    setTimeout(() => {
+      document.addEventListener("click", function _close(e) {
+        if (!dd.contains(e.target) && e.target !== btn) {
+          dd.classList.remove("show");
+          document.removeEventListener("click", _close);
+        }
+      });
+    }, 0);
+  }
+}
+
+function setAgent(agentId, btn) {
+  _agentMode = true;
+  _currentAgent = agentId;
+  document.querySelectorAll(".com-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("btn-agents").classList.add("active");
+  document.querySelectorAll("#agent-dropdown button").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  document.getElementById("agent-dropdown").classList.remove("show");
+  const lbl = document.getElementById("kpi-ro-com-label");
+  if (lbl) lbl.textContent = agentId === "all" ? "Agents" : (btn ? btn.textContent.trim() : "Agent");
+  loadPeriod(currentDebut, currentFin);
+  loadComparatif();
+  loadDN();
+}
+
+function _comParam() {
+  if (_agentMode) {
+    return `&agent=${_currentAgent || "all"}`;
+  }
+  return `&commercial=${_currentCommercial}`;
+}
+
+// ── Load period data ───────────────────────────────────────────────────────
+function loadPeriod(debut, fin) {
+  currentDebut = debut; currentFin = fin;
+  document.getElementById("hdr-range").textContent = debut + " → " + fin;
+
+  // KPI cards skeleton
+  ["kpi-ca","kpi-ro-com","kpi-ro-eq","kpi-implant","kpi-pts-jour","kpi-ca-cmd"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = "…";
+  });
+
+  const ts = Date.now();
+  fetch(`/dash/api/data?debut=${debut}&fin=${fin}${_comParam()}&_=${ts}`)
+    .then(r => r.json())
+    .then(d => updateKpis(d))
+    .catch(err => console.error("[loadPeriod]", err));
+
+  // R/O équipe : indépendant du commercial sélectionné
+  if (!_agentMode) {
+    fetch(`/dash/api/ro-equipe?debut=${debut}&fin=${fin}&_=${ts}`)
+      .then(r => r.json())
+      .then(d => updateRoEquipe(d.ro_equipe))
+      .catch(() => updateRoEquipe(null));
+  }
+}
+
+function updateRoEquipe(roE) {
+  if (roE !== null && roE !== undefined) {
+    setEl("kpi-ro-eq", roE + "\u202f%");
+    setProgress("prog-ro-eq", Math.min(roE, 100), fillClass(roE));
+  } else {
+    setEl("kpi-ro-eq", "—");
+    setProgress("prog-ro-eq", 0, "fill-accent");
+  }
+}
+
+function updateKpis(d) {
+  // CA
+  setEl("kpi-ca", euros(d.ca));
+  setEl("kpi-ca-sub", d.objectif_ca > 0 ? "Objectif\u00a0: " + euros(d.objectif_ca) : "");
+  if (d.pct_ca !== null && d.pct_ca !== undefined) {
+    showBadge("badge-ca", d.pct_ca + "\u202f%", pctBadgeClass(d.pct_ca));
+    setProgress("prog-ca", d.pct_ca, fillClass(d.pct_ca));
+  } else {
+    hideBadge("badge-ca");
+    setProgress("prog-ca", 100, "fill-accent");
+  }
+
+  // R/O Commercial
+  const roC = d.ro_commercial;
+  if (roC !== null && roC !== undefined) {
+    setEl("kpi-ro-com", roC + "\u202f%");
+    setEl("kpi-ro-com-sub", d.objectif_ca > 0 ? "Objectif\u00a0: " + euros(d.objectif_ca) : "");
+    setProgress("prog-ro-com", Math.min(roC, 100), fillClass(roC));
+  } else {
+    setEl("kpi-ro-com", "—");
+    setEl("kpi-ro-com-sub", "Pas d'objectif défini");
+    setProgress("prog-ro-com", 0, "fill-accent");
+  }
+
+  // Implantations
+  setEl("kpi-implant", d.implantations);
+  setEl("kpi-implant-sub", d.objectif_implant > 0 ? "Objectif\u00a0: " + d.objectif_implant : "");
+  if (d.pct_implant !== null && d.pct_implant !== undefined) {
+    showBadge("badge-implant", d.pct_implant + "\u202f%", pctBadgeClass(d.pct_implant, 100, 60));
+    setProgress("prog-implant", d.pct_implant, fillClass(d.pct_implant, 100, 60));
+  } else {
+    hideBadge("badge-implant");
+    setProgress("prog-implant", 100, "fill-accent");
+  }
+
+  // Points / jour terrain
+  const ptsJour = d.pts_jour || 0;
+  setEl("kpi-pts-jour", ptsJour.toFixed(1) + "\u202fpts/j");
+  const jours = d.nb_jours || 0;
+  const totalPts = d.total_pts || 0;
+  setEl("kpi-pts-jour-sub", totalPts + " pts · " + jours + " j terrain · " + (d.meetings || 0) + " visites");
+  // Objectif théorique ~8 pts/j (moyenne lundi+mar-jeu pondérée)
+  setProgress("prog-pts-jour", Math.min(100, Math.round(ptsJour / 8 * 100)), ptsJour >= 7 ? "fill-green" : ptsJour >= 5 ? "fill-amber" : "fill-red");
+
+  // CA moyen par commande
+  setEl("kpi-ca-cmd", euros(d.ca_commande));
+  setEl("kpi-ca-cmd-sub", d.nb_commandes > 0 ? d.nb_commandes + " commande" + (d.nb_commandes > 1 ? "s" : "") : "Aucune commande");
+
+  // Précommandes
+  const precom = d.precommandes || {nb: 0, montant: 0};
+  setEl("kpi-precom", precom.nb);
+  setEl("kpi-precom-sub", precom.montant > 0 ? euros(precom.montant) + " en attente" : "Aucune en attente");
+
+  // Période label
+  const debut = d.debut || currentDebut;
+  const [dy, dm] = debut.split("-");
+  const MOIS = ["Jan.","Fév.","Mar.","Avr.","Mai","Juin","Juil.","Août","Sep.","Oct.","Nov.","Déc."];
+  setEl("hdr-period", MOIS[parseInt(dm)-1] + " " + dy);
+
+  // Stocker pour le rapport PDF
+  _lastKpis = d;
+
+  // Commandes table
+  renderCommandes(d.commandes || []);
+  if (d.updated_at) {
+    setEl("sb-footer", d.updated_at);
+  }
+}
+
+function renderCommandes(commandes) {
+  const tbody = document.getElementById("cmd-tbody");
+  if (!commandes.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Aucune commande sur la période.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = commandes.map(c => `
+    <tr>
+      <td style="color:var(--text-muted);white-space:nowrap;">${c.date}</td>
+      <td><a class="deal-link" href="https://app.hubspot.com/contacts/${HUB_ID}/deal/${c.id}" target="_blank">
+        <span class="deal-name">${c.nom}</span></a></td>
+      <td>${c.is_implant ? '<span class="chip chip-implant">Implantation</span>' : `<span class="chip chip-reassort">${c.type}</span>`}</td>
+      <td>${c.stage === "Clôturée" ? `<span class="chip chip-closed">${c.stage}</span>` : `<span class="chip chip-stage">${c.stage}</span>`}</td>
+      <td class="amount-r">${euros(c.montant)}</td>
+    </tr>`).join("");
+}
+
+// ── Comparatif chart ───────────────────────────────────────────────────────
+function loadComparatif() {
+  fetch("/dash/api/comparatif?" + _comParam().slice(1) + `&_=${Date.now()}`)
+    .then(r => r.json())
+    .then(d => renderComparatif(d))
+    .catch(err => console.error("[comparatif]", err));
+}
+
+function renderComparatif(d) {
+  document.getElementById("comparatif-loading").style.display = "none";
+  document.getElementById("comparatif-wrap").style.display = "block";
+
+  const ctx = document.getElementById("chartComparatif").getContext("2d");
+  if (chartComparatif) chartComparatif.destroy();
+  chartComparatif = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: d.mois,
+      datasets: [
+        {
+          label: "2025",
+          data: d.ca_2025,
+          backgroundColor: "rgba(100,100,100,.25)",
+          borderColor:     "rgba(100,100,100,.5)",
+          borderWidth: 1.5,
+          borderRadius: 5,
+        },
+        {
+          label: "2026",
+          data: d.ca_2026,
+          backgroundColor: "rgba(249,115,22,.7)",
+          borderColor:     "#f97316",
+          borderWidth: 1.5,
+          borderRadius: 5,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "top",
+          labels: { font: { family: "'DM Sans',sans-serif", size: 11 }, padding: 16, usePointStyle: true }
+        },
+        tooltip: {
+          callbacks: { label: ctx => " " + ctx.dataset.label + " : " + euros(ctx.raw) }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: "#f0f0f0" },
+          ticks: {
+            font: { family: "'DM Sans',sans-serif", size: 11 }, color: "#737373",
+            callback: v => euros(v)
+          }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { font: { family: "'DM Sans',sans-serif", size: 11 }, color: "#737373" }
+        }
+      }
+    }
+  });
+}
+
+// ── DN Analyse ─────────────────────────────────────────────────────────────
+let _dnProduits = [];
+let _dnSort = { col: "pct", dir: "asc" };
+let _dnBenchmarks = null;
+let _dnSegFilter = "Tous";
+let _dnData = null;
+let _lastKpis = null;
+let _currentComName = "{{ commerciaux[session_owner_id]['name'] if session_owner_id in commerciaux else 'Commercial' }}";
+
+function setDNSegFilter(seg, btn) {
+  _dnSegFilter = seg;
+  document.querySelectorAll(".dn-seg-btn").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  const lbl = document.getElementById("dn-th-label");
+  if (lbl) lbl.textContent = seg === "Tous" ? "Globale" : seg;
+  updateDNSummaryCards();
+  renderDNTable();
+}
+
+function updateDNSummaryCards() {
+  if (!_dnData) return;
+  if (_dnSegFilter === "Tous") {
+    setEl("dn-cat-moy", pct1(_dnData.dn_catalogue_moy));
+    setEl("dn-faibles", _dnData.ph_faibles + " / " + _dnData.nb_clients);
+    setEl("dn-forts",   _dnData.ph_forts   + " / " + _dnData.nb_clients);
+  } else {
+    const sd = (_dnData.dn_par_segment || {})[_dnSegFilter] || {};
+    setEl("dn-cat-moy", pct1(sd.dn_moy || 0));
+    setEl("dn-faibles", (sd.ph_faibles || 0) + " / " + (sd.nb || 0));
+    setEl("dn-forts",   (sd.ph_forts   || 0) + " / " + (sd.nb || 0));
+  }
+}
+
+function loadDNBenchmarks() {
+  fetch(`/dash/api/dn-benchmarks?_=${Date.now()}`)
+    .then(r => r.json())
+    .then(b => { _dnBenchmarks = b; renderDNTable(); })
+    .catch(err => console.error("[dn-benchmarks]", err));
+}
+
+function refreshPortefeuille() {
+  fetch(`/dash/api/portefeuille?_=${Date.now()}`)
+    .then(r => r.json())
+    .then(d => {
+      const nbC = d.nb_clients || 0, nbP = d.nb_prospects || 0;
+      const sbC = document.getElementById("sb-clients");
+      const legC = document.getElementById("leg-clients");
+      const tot  = document.getElementById("donut-total");
+      if (sbC)  sbC.textContent  = nbC;
+      if (legC) legC.textContent = nbC;
+      if (tot)  tot.textContent  = nbC + nbP;
+      if (chartPortef) {
+        chartPortef.data.datasets[0].data = [nbC, nbP];
+        chartPortef.update();
+      }
+    })
+    .catch(err => console.error("[portefeuille]", err));
+}
+
+function loadDN() {
+  fetch("/dash/api/dn?" + _comParam().slice(1) + `&_=${Date.now()}`)
+    .then(r => r.json())
+    .then(d => renderDN(d))
+    .catch(err => {
+      document.getElementById("dn-loading").innerHTML = '<span style="color:var(--red)">Erreur chargement DN.</span>';
+      console.error("[dn]", err);
+    });
+}
+
+function sortDN(col) {
+  if (_dnSort.col === col) {
+    _dnSort.dir = _dnSort.dir === "asc" ? "desc" : "asc";
+  } else {
+    _dnSort.col = col;
+    _dnSort.dir = "asc";
+  }
+  ["pct","produit"].forEach(c => {
+    const el = document.getElementById("sort-icon-" + c);
+    if (el) el.textContent = "";
+  });
+  const icon = document.getElementById("sort-icon-" + col);
+  if (icon) icon.textContent = _dnSort.dir === "asc" ? " ▲" : " ▼";
+  renderDNTable();
+}
+
+function renderDNTable() {
+  // Résoudre le pct affiché selon le filtre segment actif
+  const getDisplayPct = p => {
+    if (_dnSegFilter === "Tous") return { pct: p.pct, nb: p.nb, total: p.total };
+    const seg = (p.segments || {})[_dnSegFilter] || { pct: 0, nb: 0, total: 0 };
+    return seg;
+  };
+
+  const sorted = [..._dnProduits].sort((a, b) => {
+    if (_dnSort.col === "produit") {
+      return _dnSort.dir === "asc" ? a.produit.localeCompare(b.produit) : b.produit.localeCompare(a.produit);
+    }
+    const va = getDisplayPct(a).pct;
+    const vb = getDisplayPct(b).pct;
+    return _dnSort.dir === "asc" ? va - vb : vb - va;
+  });
+
+  const fmtDelta = (myPct, benchPct, bestObj) => {
+    if (!_dnBenchmarks) return '<span style="color:var(--text-muted);font-size:11px;">…</span>';
+    if (benchPct === undefined || benchPct === null) return '<span style="color:var(--text-muted);font-size:11px;">—</span>';
+    const delta = Math.round((myPct - benchPct) * 10) / 10;
+    const sign  = delta > 0 ? "+" : "";
+    const color = delta > 0 ? "var(--green)" : delta < 0 ? "var(--red)" : "var(--text-muted)";
+    const bestHtml = bestObj
+      ? `<div style="font-size:9px;color:var(--text-muted);margin-top:2px;">🏆 ${bestObj.name} (${bestObj.pct}%)</div>`
+      : "";
+    return `<span style="color:${color}">${sign}${delta} pts</span>${bestHtml}`;
+  };
+
+  const tbody = document.getElementById("dn-tbody");
+  tbody.innerHTML = sorted.map(p => {
+    const disp = getDisplayPct(p);
+    const rowCls = dn_row_class(disp.pct);
+    const barClr = dn_bar_color(disp.pct);
+    const pctCls = dn_pct_class(disp.pct);
+
+    let bNaali, bAgents, bestNaali, bestAgents;
+    if (_dnBenchmarks) {
+      if (_dnSegFilter === "Tous") {
+        bNaali    = (_dnBenchmarks.naali       || {})[p.produit];
+        bAgents   = (_dnBenchmarks.agents      || {})[p.produit];
+        bestNaali = (_dnBenchmarks.best_naali  || {})[p.produit];
+        bestAgents= (_dnBenchmarks.best_agents || {})[p.produit];
+      } else {
+        bNaali    = ((_dnBenchmarks.naali_segs       || {})[_dnSegFilter] || {})[p.produit];
+        bAgents   = ((_dnBenchmarks.agents_segs      || {})[_dnSegFilter] || {})[p.produit];
+        bestNaali = ((_dnBenchmarks.best_naali_segs  || {})[_dnSegFilter] || {})[p.produit];
+        bestAgents= ((_dnBenchmarks.best_agents_segs || {})[_dnSegFilter] || {})[p.produit];
+      }
+    }
+
+    const f5badge = p.is_5f ? ' <span style="font-size:9px;color:var(--accent);font-weight:700;">★</span>' : "";
+
+    return `
+    <tr class="${rowCls}">
+      <td class="col-prod">${p.produit}${f5badge}</td>
+      <td class="col-pct">
+        <span class="${pctCls}">${pct1(disp.pct)}</span>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:1px;">${disp.nb} / ${disp.total}</div>
+        <div class="bar-inline col-bar">
+          <div class="bar-inline-fill" style="width:${disp.pct}%;background:${barClr}"></div>
+        </div>
+      </td>
+      <td class="dn-delta">${fmtDelta(disp.pct, bNaali, bestNaali)}</td>
+      <td class="dn-delta">${fmtDelta(disp.pct, bAgents, bestAgents)}</td>
+    </tr>`;
+  }).join("");
+}
+
+function renderDN(d) {
+  if (d.error) {
+    document.getElementById("dn-loading").innerHTML = `<span style="color:var(--red)">${d.error}</span>`;
+    return;
+  }
+
+  // Stocker les données
+  _dnData = d;
+  _dnProduits = d.dn_produits || [];
+
+  // Summary cards (respecte le filtre actif si déjà sélectionné)
+  updateDNSummaryCards();
+
+  // Afficher le tableau et les filtres
+  document.getElementById("dn-loading").style.display    = "none";
+  document.getElementById("dn-table-wrap").style.display = "block";
+  document.getElementById("dn-seg-filters").style.display = "flex";
+  renderDNTable();
+
+  // DN par segment cards
+  const segGrid  = document.getElementById("dn-seg-grid");
+  const segColors = { "Prioritaires": "var(--green)", "Secondaires": "var(--amber)", "Non Prioritaires": "var(--text-muted)" };
+  segGrid.innerHTML = Object.entries(d.dn_par_segment || {}).map(([seg, sd]) => `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
+      <div style="font-size:11px;font-weight:700;color:${segColors[seg]||'var(--text-muted)'};text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">${seg}</div>
+      <div style="font-size:20px;font-weight:700;">${pct1(sd.dn_moy)}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${sd.refs_moy} réf. moy. · ${sd.nb} pharmacies</div>
+    </div>`).join("");
+  document.getElementById("dn-segments").style.display = "block";
+}
+
+// ── Portefeuille chart ─────────────────────────────────────────────────────
+function initPortef(nbC, nbP) {
+  const ctx = document.getElementById("chartPortef").getContext("2d");
+  chartPortef = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: ["Clients", "Prospects"],
+      datasets: [{ data: [nbC, nbP], backgroundColor: ["#16a34a","#f97316"], borderWidth: 0, hoverOffset: 5 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: "70%",
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label} : ${ctx.raw}` } }
+      }
+    }
+  });
+}
+
+// ── Refresh ────────────────────────────────────────────────────────────────
+const _SECTION_FNS = {
+  comparatif: () => loadComparatif(),
+  dn:         () => { loadDN(); loadDNBenchmarks(); },
+  portef:     () => refreshPortefeuille(),
+  clientsca:  () => loadClientsCa(),
+};
+
+function refreshSection(key) {
+  const btnId = { comparatif:"btn-refresh-comparatif", dn:"btn-refresh-dn", portef:"btn-refresh-portef", clientsca:"btn-refresh-clients-ca", portefeq:"btn-refresh-portef-eq" }[key];
+  const btn = document.getElementById(btnId);
+  if (!btn || btn.disabled) return;
+  btn.disabled = true;
+  btn.textContent = "…";
+  (_SECTION_FNS[key] || (() => {}))();
+  setTimeout(() => { if (btn) { btn.disabled = false; btn.textContent = "↺"; } }, 4000);
+}
+
+function triggerRefresh() {
+  const btn  = document.getElementById("btn-refresh");
+  const spin = document.getElementById("spin-btn");
+  const lbl  = document.getElementById("btn-lbl");
+  btn.disabled = true; spin.style.display = "block"; lbl.textContent = "…";
+  loadPeriod(currentDebut, currentFin);
+  loadComparatif();
+  loadDN();
+  loadDNBenchmarks();
+  refreshPortefeuille();
+  loadClientsCa();
+  setTimeout(() => {
+    btn.disabled = false; spin.style.display = "none"; lbl.textContent = "Actualiser";
+  }, 5000);
+}
+
+// ── Comparatif portefeuilles équipe ────────────────────────────────────────
+function loadPortefeuillesEquipe() {
+  document.getElementById("portef-eq-loading").style.display = "flex";
+  document.getElementById("portef-eq-wrap").style.display    = "none";
+  fetch(`/dash/api/comparatif-portefeuilles?_=${Date.now()}`)
+    .then(r => r.json())
+    .then(data => renderPortefeuillesEquipe(data))
+    .catch(err => {
+      document.getElementById("portef-eq-loading").style.display = "none";
+      console.error("[portef-eq]", err);
+    });
+}
+
+function renderPortefeuillesEquipe(data) {
+  const loading = document.getElementById("portef-eq-loading");
+  const wrap    = document.getElementById("portef-eq-wrap");
+  const tbody   = document.getElementById("portef-eq-tbody");
+  const maxScore = Math.max(...data.map(d => d.score_potentiel), 1);
+
+  tbody.innerHTML = data.map((d, i) => {
+    const isAmir = d.owner_id === "727665403";
+    const dnClr  = v => v >= 60 ? "var(--green)" : v >= 40 ? "var(--amber)" : "var(--red)";
+    const scorePct = Math.round(d.score_potentiel / maxScore * 100);
+    const medal  = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}`;
+    return `<tr style="${isAmir ? "background:var(--accent-dim);" : ""}">
+      <td style="font-weight:700;font-size:13px;">${medal}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;border-radius:7px;background:${isAmir ? "var(--accent)" : "var(--sidebar)"};color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">${d.initials}</div>
+          <span style="font-weight:${isAmir ? "700" : "600"};font-size:13px;">${d.name}</span>
+        </div>
+      </td>
+      <td class="amount-r"><strong>${d.nb_clients}</strong></td>
+      <td class="amount-r"><span style="color:var(--green);font-weight:700;">${d.nb_prio}</span></td>
+      <td class="amount-r"><span style="color:var(--amber);font-weight:600;">${d.nb_sec}</span></td>
+      <td class="amount-r"><span style="color:${dnClr(d.dn_global_moy)};font-weight:700;">${pct1(d.dn_global_moy)}</span></td>
+      <td class="amount-r"><span style="color:${dnClr(d.dn_5f_moy)};font-weight:700;">${pct1(d.dn_5f_moy)}</span></td>
+      <td class="amount-r"><span class="badge badge-red">${d.nb_low_dn}</span></td>
+      <td class="amount-r"><span class="badge badge-amber">${d.nb_sans_5f}</span></td>
+      <td class="amount-r">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="flex:1;height:6px;background:var(--border);border-radius:99px;min-width:60px;">
+            <div style="height:6px;border-radius:99px;background:var(--accent);width:${scorePct}%"></div>
+          </div>
+          <span style="font-weight:700;font-size:12px;min-width:28px;text-align:right;">${d.score_potentiel}</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+
+  loading.style.display = "none";
+  wrap.style.display    = "block";
+}
+
+// ── Classement clients CA ───────────────────────────────────────────────────
+let _clientsData = [];
+let _ccSort = { col: "ca", dir: "desc" };
+
+function sortClients(col) {
+  if (_ccSort.col === col) {
+    _ccSort.dir = _ccSort.dir === "asc" ? "desc" : "asc";
+  } else {
+    _ccSort.col = col;
+    _ccSort.dir = col === "nom" || col === "ville" || col === "potentiel" ? "asc" : "desc";
+  }
+  // Mise à jour icônes
+  ["nom","ville","potentiel","dn_global","dn_5f","ca"].forEach(c => {
+    const el = document.getElementById("cc-icon-" + c);
+    if (el) el.textContent = c === _ccSort.col ? (_ccSort.dir === "asc" ? "▲" : "▼") : "";
+  });
+  renderClientsCa(_clientsData);
+}
+
+function loadClientsCa() {
+  document.getElementById("clients-ca-loading").style.display = "flex";
+  document.getElementById("clients-ca-wrap").style.display = "none";
+
+  fetch(`/dash/api/clients-ca?annee=2026&_=${Date.now()}`)
+    .then(r => r.json())
+    .then(data => renderClientsCa(data))
+    .catch(err => {
+      console.error("[clientsCa]", err);
+      document.getElementById("clients-ca-loading").style.display = "none";
+    });
+}
+
+function renderClientsCa(data) {
+  const loading = document.getElementById("clients-ca-loading");
+  const wrap    = document.getElementById("clients-ca-wrap");
+  const tbody   = document.getElementById("clients-ca-tbody");
+
+  if (data) _clientsData = data;
+
+  const sorted = [..._clientsData].sort((a, b) => {
+    const col = _ccSort.col;
+    const va = a[col] ?? "";
+    const vb = b[col] ?? "";
+    const cmp = typeof va === "string" ? va.localeCompare(vb) : (va - vb);
+    return _ccSort.dir === "asc" ? cmp : -cmp;
+  });
+
+  const potColors = {
+    "Prioritaires":     "badge-green",
+    "Secondaires":      "badge-amber",
+    "Non Prioritaires": "badge-gray",
+  };
+
+  if (!sorted.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Aucun client trouvé.</td></tr>';
+  } else {
+    tbody.innerHTML = sorted.map((c, i) => {
+      const badge   = potColors[c.potentiel] || "badge-gray";
+      const caFmt   = c.ca > 0 ? euros(c.ca) : '<span style="color:var(--text-muted)">—</span>';
+      const dnGClr  = c.dn_global >= 75 ? "var(--green)" : c.dn_global >= 50 ? "var(--amber)" : "var(--red)";
+      const dn5Clr  = c.dn_5f    >= 75 ? "var(--green)" : c.dn_5f    >= 50 ? "var(--amber)" : "var(--red)";
+      return `<tr>
+        <td style="color:var(--text-muted);font-weight:700;font-size:12px;">${i + 1}</td>
+        <td style="font-weight:600;">${c.nom}</td>
+        <td style="color:var(--text-muted);font-size:12px;">${c.ville || '—'}</td>
+        <td><span class="badge ${badge}">${c.potentiel}</span></td>
+        <td class="amount-r"><span style="color:${dnGClr};font-weight:700;">${pct1(c.dn_global)}</span><div style="font-size:10px;color:var(--text-muted);">${c.nb_refs} / 12</div></td>
+        <td class="amount-r"><span style="color:${dn5Clr};font-weight:700;">${pct1(c.dn_5f)}</span><div style="font-size:10px;color:var(--text-muted);">${c.nb_5f} / 8</div></td>
+        <td class="amount-r">${caFmt}</td>
+      </tr>`;
+    }).join("");
+  }
+
+  loading.style.display = "none";
+  wrap.style.display = "block";
+}
+
+// ── Utils ──────────────────────────────────────────────────────────────────
+function setEl(id, val) { const e = document.getElementById(id); if (e) e.textContent = val; }
+function showBadge(id, text, cls) {
+  const e = document.getElementById(id);
+  if (!e) return;
+  e.textContent = text; e.className = "badge " + cls; e.style.display = "";
+}
+function hideBadge(id) { const e = document.getElementById(id); if (e) e.style.display = "none"; }
+function setProgress(id, pct, cls) {
+  const e = document.getElementById(id);
+  if (!e) return;
+  e.style.width = Math.min(100, pct || 0) + "%";
+  e.className = "progress-fill " + cls;
+}
+
+// ── Rapport PDF ────────────────────────────────────────────────────────────
+function generateReport() {
+  if (!_lastKpis || !_dnData) {
+    alert("Les données ne sont pas encore chargées. Attendez quelques secondes et réessayez.");
+    return;
+  }
+  const kpi = _lastKpis;
+  const dn  = _dnData;
+  const nom = _currentComName;
+  const now = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+  const periode = `${currentDebut.split("-").reverse().join("/")} → ${currentFin.split("-").reverse().join("/")}`;
+
+  // KPI helpers
+  const roColor  = v => v >= 100 ? "rpt-green" : v >= 70 ? "rpt-amber" : "rpt-red";
+  const barColor = v => v >= 75 ? "#16a34a" : v >= 50 ? "#d97706" : "#dc2626";
+  const fmtEur   = v => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v || 0);
+  const fmtPct   = v => (v || 0).toFixed(1) + "\u202f%";
+
+  // DN rows : globale + Prioritaires
+  const dnRows = [...(dn.dn_produits || [])].sort((a, b) => a.pct - b.pct).map(p => {
+    const prio = (p.segments || {})["Prioritaires"] || { pct: 0, nb: 0, total: 0 };
+    const gColor = barColor(p.pct);
+    const pColor = barColor(prio.pct);
+    const dnDelta = (benchKey) => {
+      if (!_dnBenchmarks) return "—";
+      const bench = (_dnBenchmarks[benchKey] || {})[p.produit];
+      if (bench === undefined || bench === null) return "—";
+      const d = Math.round((p.pct - bench) * 10) / 10;
+      const sign = d > 0 ? "+" : "";
+      const cl = d > 0 ? "rpt-green" : d < 0 ? "rpt-red" : "";
+      return `<span class="${cl}">${sign}${d} pts</span>`;
+    };
+    return `
+      <tr>
+        <td>${p.produit}</td>
+        <td>
+          <span style="font-weight:700;color:${gColor}">${fmtPct(p.pct)}</span>
+          <span style="color:#aaa;font-size:9px;"> ${p.nb}/${p.total}</span>
+          <div class="rpt-bar-wrap"><div class="rpt-bar-fill" style="width:${p.pct}%;background:${gColor}"></div></div>
+        </td>
+        <td>
+          <span style="font-weight:700;color:${pColor}">${fmtPct(prio.pct)}</span>
+          <span style="color:#aaa;font-size:9px;"> ${prio.nb}/${prio.total}</span>
+          <div class="rpt-bar-wrap"><div class="rpt-bar-fill" style="width:${prio.pct}%;background:${pColor}"></div></div>
+        </td>
+        <td style="text-align:center;">${dnDelta("naali")}</td>
+        <td style="text-align:center;">${dnDelta("agents")}</td>
+      </tr>`;
+  }).join("");
+
+  const roVal = kpi.ro_commercial;
+  const roCls = roVal !== null && roVal !== undefined ? roColor(roVal) : "";
+
+  document.getElementById("print-report").innerHTML = `
+    <div style="font-family:'DM Sans',sans-serif;max-width:900px;margin:0 auto;">
+
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #f97316;padding-bottom:12px;margin-bottom:20px;">
+        <div>
+          <div style="font-size:22px;font-weight:800;color:#f97316;">Naali — Rapport de performance</div>
+          <div style="font-size:13px;color:#525252;margin-top:4px;">${nom} · ${periode}</div>
+        </div>
+        <div style="text-align:right;font-size:11px;color:#aaa;">Généré le ${now}</div>
+      </div>
+
+      <div class="rpt-section">
+        <div class="rpt-title">KPIs Commerciaux</div>
+        <div class="rpt-kpi-grid">
+          <div class="rpt-kpi-box">
+            <div class="rpt-kpi-val">${fmtEur(kpi.ca)}</div>
+            <div class="rpt-kpi-lbl">Chiffre d'affaires</div>
+            ${kpi.objectif_ca > 0 ? `<div class="rpt-kpi-sub">Objectif : ${fmtEur(kpi.objectif_ca)}</div>` : ""}
+            ${kpi.pct_ca !== null && kpi.pct_ca !== undefined ? `<div class="rpt-bar-wrap" style="margin-top:6px;"><div class="rpt-bar-fill" style="width:${Math.min(kpi.pct_ca,100)}%;background:${barColor(kpi.pct_ca)}"></div></div>` : ""}
+          </div>
+          <div class="rpt-kpi-box">
+            <div class="rpt-kpi-val ${roCls}">${roVal !== null && roVal !== undefined ? roVal + "\u202f%" : "—"}</div>
+            <div class="rpt-kpi-lbl">Taux de Réalisation (R/O)</div>
+            ${roVal !== null && roVal !== undefined ? `<div class="rpt-kpi-sub">${roVal >= 100 ? "✓ Objectif atteint" : roVal >= 70 ? "En bonne voie" : "Sous objectif"}</div>` : ""}
+          </div>
+          <div class="rpt-kpi-box">
+            <div class="rpt-kpi-val">${kpi.implantations}</div>
+            <div class="rpt-kpi-lbl">Implantations</div>
+            ${kpi.objectif_implant > 0 ? `<div class="rpt-kpi-sub">Objectif : ${kpi.objectif_implant}</div>` : ""}
+          </div>
+          <div class="rpt-kpi-box">
+            <div class="rpt-kpi-val">${fmtEur(kpi.ca_commande)}</div>
+            <div class="rpt-kpi-lbl">CA moyen / commande</div>
+            <div class="rpt-kpi-sub">${kpi.nb_commandes || 0} commande${(kpi.nb_commandes||0) > 1 ? "s" : ""} · ${kpi.meetings} visites</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rpt-section">
+        <div class="rpt-title">Distribution Numérique — ${dn.nb_clients} clients · ${dn.nb_references} références</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
+          <div class="rpt-kpi-box">
+            <div class="rpt-kpi-val">${fmtPct(dn.dn_catalogue_moy)}</div>
+            <div class="rpt-kpi-lbl">DN catalogue moyenne</div>
+            <div class="rpt-kpi-sub">${dn.refs_moyennes} réf. / pharmacie</div>
+          </div>
+          <div class="rpt-kpi-box">
+            <div class="rpt-kpi-val rpt-red">${dn.ph_faibles}</div>
+            <div class="rpt-kpi-lbl">Pharmacies &lt; 50%</div>
+            <div class="rpt-kpi-sub">Moins de 6 références</div>
+          </div>
+          <div class="rpt-kpi-box">
+            <div class="rpt-kpi-val rpt-green">${dn.ph_forts}</div>
+            <div class="rpt-kpi-lbl">Pharmacies ≥ 75%</div>
+            <div class="rpt-kpi-sub">9+ références</div>
+          </div>
+        </div>
+        <table class="rpt-dn-table">
+          <thead>
+            <tr>
+              <th style="width:30%">Référence</th>
+              <th style="width:20%">DN Globale</th>
+              <th style="width:20%">DN Prioritaires</th>
+              <th style="width:15%;text-align:center;">VS Naali</th>
+              <th style="width:15%;text-align:center;">VS Agents</th>
+            </tr>
+          </thead>
+          <tbody>${dnRows}</tbody>
+        </table>
+      </div>
+
+      <div class="rpt-footer">
+        Dashboard Naali · ${now} · Données HubSpot live
+      </div>
+    </div>`;
+
+  window.print();
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", () => {
+  initPortef({{ nb_clients }}, {{ nb_prospects }});
+  refreshPortefeuille();
+
+  // Charger les KPIs via JS (données toujours fraîches, commercial pris en compte)
+  const [initDebut, initFin] = getPresetDates("this_month");
+  loadPeriod(initDebut, initFin);
+
+  // Charger comparatif, DN et classement clients en async (heavy)
+  loadComparatif();
+  loadDN();
+  loadClientsCa();
+  setTimeout(loadDNBenchmarks, 2000);
+});
+</script>
+
+</body>
+</html>

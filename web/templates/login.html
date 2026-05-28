@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Naali Planner — Connexion</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #0F0F0F;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      color: #FAF7F2;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 25% 15%, rgba(210,148,89,0.06) 0%, transparent 55%),
+        radial-gradient(ellipse at 75% 85%, rgba(210,148,89,0.04) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 390px;
+      padding: 24px 20px;
+      position: relative;
+    }
+
+    /* ── Logo ── */
+    .logo {
+      text-align: center;
+      margin-bottom: 36px;
+      animation: fadeDown 0.4s ease both;
+    }
+    .logo-text {
+      font-size: 27px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .logo-text span { color: #D29459; }
+    .logo-sub {
+      font-size: 11px;
+      color: #505050;
+      margin-top: 5px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Steps ── */
+    .step { animation: fadeIn 0.25s ease both; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .step.leaving {
+      animation: fadeOut 0.2s ease both;
+      pointer-events: none;
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translateX(0); }
+      to   { opacity: 0; transform: translateX(-20px); }
+    }
+
+    /* ── Step 1 — Profils ── */
+    .section-title {
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 14px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    .profiles { display: flex; flex-direction: column; gap: 9px; }
+
+    .profile-card {
+      background: #161616;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 14px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      transition: border-color .2s, background .2s, transform .15s;
+      width: 100%;
+      text-align: left;
+      color: inherit;
+      font-family: inherit;
+    }
+    .profile-card:hover {
+      border-color: rgba(210,148,89,0.5);
+      background: rgba(210,148,89,0.04);
+      transform: translateX(3px);
+    }
+    .profile-card:active { transform: scale(0.99); }
+
+    .avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #D29459, #9a5a28);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; font-weight: 700; flex-shrink: 0;
+      color: #fff;
+    }
+
+    .profile-info .pname  { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .profile-info .pemail { font-size: 11px; color: #555; }
+
+    .chevron { margin-left: auto; color: #333; font-size: 17px; transition: color .2s, transform .2s; }
+    .profile-card:hover .chevron { color: #D29459; transform: translateX(2px); }
+
+    /* ── Step 2 — Mot de passe ── */
+    #step2 { display: none; }
+
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: none; border: none;
+      color: #555; font-size: 12px;
+      cursor: pointer; padding: 0;
+      font-family: inherit;
+      margin-bottom: 26px;
+      transition: color .2s;
+      letter-spacing: 0.2px;
+    }
+    .back-btn:hover { color: #D29459; }
+
+    .profile-header {
+      display: flex; align-items: center; gap: 13px;
+      margin-bottom: 28px;
+    }
+    .profile-header .avatar {
+      width: 46px; height: 46px; font-size: 19px;
+      flex-shrink: 0;
+    }
+    .greeting      { font-size: 17px; font-weight: 600; }
+    .greeting-sub  { font-size: 11px; color: #555; margin-top: 3px; }
+
+    /* ── Champs ── */
+    .field { position: relative; margin-bottom: 14px; }
+    .field label {
+      display: block; font-size: 10px; color: #555;
+      margin-bottom: 7px; letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    .field input {
+      width: 100%; padding: 12px 44px 12px 14px;
+      background: #111; border: 1px solid #252525; border-radius: 10px;
+      color: #FAF7F2; font-size: 14px; font-family: inherit; outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .field input:focus {
+      border-color: #D29459;
+      box-shadow: 0 0 0 3px rgba(210,148,89,0.1);
+    }
+    .field input.input-error { border-color: #c44; }
+
+    .toggle-pwd {
+      position: absolute; right: 12px; bottom: 11px;
+      background: none; border: none; cursor: pointer;
+      color: #444; font-size: 15px; padding: 0;
+      transition: color .2s; line-height: 1;
+    }
+    .toggle-pwd:hover { color: #D29459; }
+
+    .error-msg {
+      font-size: 11px; color: #c55;
+      margin-top: -6px; margin-bottom: 12px;
+      min-height: 14px;
+    }
+
+    /* ── Bouton principal ── */
+    .btn-primary {
+      width: 100%; padding: 13px;
+      background: #D29459; border: none; border-radius: 10px;
+      color: #fff; font-size: 14px; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+      transition: background .2s, transform .1s;
+      margin-top: 6px;
+      letter-spacing: 0.2px;
+    }
+    .btn-primary:hover:not(:disabled) { background: #bf8344; }
+    .btn-primary:active:not(:disabled) { transform: scale(0.99); }
+    .btn-primary:disabled { background: #3a2510; color: #6a4520; cursor: not-allowed; }
+
+    /* ── Bannière première connexion ── */
+    .first-login-banner {
+      background: rgba(210,148,89,0.08);
+      border: 1px solid rgba(210,148,89,0.2);
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 12px;
+      color: #C09060;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .first-login-banner strong { color: #D29459; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="logo">
+      <div class="logo-text">Naali <span>Planner</span></div>
+      <div class="logo-sub">Copilote commercial</div>
+    </div>
+
+    <!-- ── Step 1 : sélection profil ── -->
+    <div class="step" id="step1">
+      <div class="section-title">Choisissez votre profil</div>
+      <div class="profiles">
+        {% for p in profiles %}
+        <button class="profile-card"
+                onclick="selectProfile('{{ p.owner_id }}', '{{ p.name }}', '{{ p.email }}')">
+          <div class="avatar">{{ p.name[0] }}</div>
+          <div class="profile-info">
+            <div class="pname">{{ p.name }}</div>
+            <div class="pemail">{{ p.email }}</div>
+          </div>
+          <span class="chevron">›</span>
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- ── Step 2 : mot de passe ── -->
+    <div class="step" id="step2">
+      <button class="back-btn" onclick="goBack()">‹ Changer de profil</button>
+
+      <div class="profile-header">
+        <div class="avatar" id="pwd-avatar"></div>
+        <div>
+          <div class="greeting" id="pwd-name"></div>
+          <div class="greeting-sub" id="pwd-sub"></div>
+        </div>
+      </div>
+
+      <!-- Connexion normale -->
+      <div id="mode-login">
+        <div class="field">
+          <label>Mot de passe</label>
+          <input type="password" id="pwd-input" placeholder="••••••••"
+                 autocomplete="current-password"
+                 onkeydown="if(event.key==='Enter') submitLogin()"/>
+          <button type="button" class="toggle-pwd"
+                  onclick="togglePwd('pwd-input', this)" tabindex="-1">👁</button>
+        </div>
+        <div class="error-msg" id="login-error"></div>
+        <button class="btn-primary" id="btn-login" onclick="submitLogin()">
+          Se connecter
+        </button>
+      </div>
+
+      <!-- Première connexion -->
+      <div id="mode-create" style="display:none">
+        <div class="first-login-banner">
+          Première connexion — <strong>crée ton mot de passe</strong> pour sécuriser ton accès.
+        </div>
+        <div class="field">
+          <label>Nouveau mot de passe</label>
+          <input type="password" id="new-pwd" placeholder="Min. 6 caractères"
+                 autocomplete="new-password"
+                 oninput="clearCreateError()"/>
+          <button type="button" class="toggle-pwd"
+                  onclick="togglePwd('new-pwd', this)" tabindex="-1">👁</button>
+        </div>
+        <div class="field">
+          <label>Confirmer le mot de passe</label>
+          <input type="password" id="new-pwd-confirm" placeholder="••••••••"
+                 autocomplete="new-password"
+                 onkeydown="if(event.key==='Enter') submitCreate()"/>
+          <button type="button" class="toggle-pwd"
+                  onclick="togglePwd('new-pwd-confirm', this)" tabindex="-1">👁</button>
+        </div>
+        <div class="error-msg" id="create-error"></div>
+        <button class="btn-primary" id="btn-create" onclick="submitCreate()">
+          Créer mon compte
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let currentOwnerId = null;
+
+    async function selectProfile(ownerId, name, email) {
+      currentOwnerId = ownerId;
+
+      // Mise à jour de l'en-tête step 2
+      document.getElementById('pwd-avatar').textContent = name[0];
+      document.getElementById('pwd-name').textContent = 'Bonjour, ' + name.split(' ')[0];
+      document.getElementById('login-error').textContent = '';
+      document.getElementById('create-error').textContent = '';
+      document.getElementById('pwd-input').value = '';
+      document.getElementById('new-pwd').value = '';
+      document.getElementById('new-pwd-confirm').value = '';
+
+      // Vérifier si l'utilisateur a déjà un mot de passe
+      let hasPwd = true;
+      try {
+        const r = await fetch('/api/login/check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ owner_id: ownerId })
+        });
+        const d = await r.json();
+        hasPwd = d.has_password;
+      } catch (e) { /* réseau — on suppose qu'un mot de passe existe */ }
+
+      document.getElementById('mode-login').style.display  = hasPwd ? '' : 'none';
+      document.getElementById('mode-create').style.display = hasPwd ? 'none' : '';
+      document.getElementById('pwd-sub').textContent = hasPwd ? email : 'Bienvenue sur Naali Planner';
+
+      // Animation step 1 → step 2
+      const s1 = document.getElementById('step1');
+      const s2 = document.getElementById('step2');
+
+      s1.classList.add('leaving');
+      setTimeout(() => {
+        s1.style.display = 'none';
+        s1.classList.remove('leaving');
+        s2.style.display = 'block';
+        // Re-trigger animation
+        s2.style.animation = 'none';
+        s2.offsetHeight; // reflow
+        s2.style.animation = '';
+        // Focus
+        const focusEl = hasPwd
+          ? document.getElementById('pwd-input')
+          : document.getElementById('new-pwd');
+        focusEl.focus();
+      }, 200);
+    }
+
+    function goBack() {
+      const s1 = document.getElementById('step1');
+      const s2 = document.getElementById('step2');
+      s2.style.display = 'none';
+      s1.style.display = 'block';
+      s1.style.animation = 'none';
+      s1.offsetHeight;
+      s1.style.animation = '';
+      currentOwnerId = null;
+    }
+
+    function togglePwd(inputId, btn) {
+      const inp = document.getElementById(inputId);
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+      btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+    }
+
+    function clearCreateError() {
+      document.getElementById('create-error').textContent = '';
+    }
+
+    async function submitLogin() {
+      const pwd = document.getElementById('pwd-input').value;
+      if (!pwd) { document.getElementById('pwd-input').focus(); return; }
+
+      const btn = document.getElementById('btn-login');
+      btn.disabled = true;
+      btn.textContent = '...';
+      document.getElementById('login-error').textContent = '';
+
+      try {
+        const r = await fetch('/api/login/authenticate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ owner_id: currentOwnerId, password: pwd })
+        });
+        const d = await r.json();
+        if (d.ok) {
+          window.location.href = d.redirect || '/';
+        } else {
+          document.getElementById('login-error').textContent = d.error || 'Erreur';
+          const inp = document.getElementById('pwd-input');
+          inp.classList.add('input-error');
+          setTimeout(() => inp.classList.remove('input-error'), 1500);
+          btn.disabled = false;
+          btn.textContent = 'Se connecter';
+          inp.select();
+        }
+      } catch (e) {
+        document.getElementById('login-error').textContent = 'Erreur réseau';
+        btn.disabled = false;
+        btn.textContent = 'Se connecter';
+      }
+    }
+
+    async function submitCreate() {
+      const pwd     = document.getElementById('new-pwd').value;
+      const confirm = document.getElementById('new-pwd-confirm').value;
+      const errEl   = document.getElementById('create-error');
+
+      if (pwd.length < 6) {
+        errEl.textContent = 'Mot de passe trop court (min. 6 caractères)';
+        document.getElementById('new-pwd').focus();
+        return;
+      }
+      if (pwd !== confirm) {
+        errEl.textContent = 'Les mots de passe ne correspondent pas';
+        document.getElementById('new-pwd-confirm').focus();
+        return;
+      }
+
+      const btn = document.getElementById('btn-create');
+      btn.disabled = true;
+      btn.textContent = '...';
+      errEl.textContent = '';
+
+      try {
+        const r = await fetch('/api/login/set-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ owner_id: currentOwnerId, password: pwd })
+        });
+        const d = await r.json();
+        if (d.ok) {
+          window.location.href = d.redirect || '/';
+        } else {
+          errEl.textContent = d.error || 'Erreur';
+          btn.disabled = false;
+          btn.textContent = 'Créer mon compte';
+        }
+      } catch (e) {
+        errEl.textContent = 'Erreur réseau';
+        btn.disabled = false;
+        btn.textContent = 'Créer mon compte';
+      }
+    }
+  </script>
+</body>
+</html>

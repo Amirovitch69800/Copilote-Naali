@@ -1,0 +1,17 @@
+.vercel
+__pycache__/
+*.pyc
+*.pyo
+.env
+dist/
+build/
+
+# Base SQLite (données utilisateur)
+data/naali.db
+
+# Fichiers backup CSV
+data/*.bak
+data/*.bak2
+
+# macOS
+.DS_Store
