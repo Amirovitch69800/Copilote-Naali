@@ -1798,39 +1798,6 @@ def dash_api_dn_benchmarks():
     exclude = request.args.get("exclude")
     return _dash_nocache(_dash.get_dn_benchmarks(exclude_owner_id=exclude))
 
-@app.route("/dash/api/debug-ca")
-def dash_api_debug_ca():
-    """Debug : deals d'Amir avec closedate en mai 2025, tous pipelines."""
-    import requests as _req
-    from config import HUBSPOT_API_KEY
-    payload = {
-        "filterGroups": [{"filters": [
-            {"propertyName": "closedate",        "operator": "GTE", "value": _dash._to_ms("2025-05-01")},
-            {"propertyName": "closedate",        "operator": "LTE", "value": _dash._to_ms("2025-05-31", end_of_day=True)},
-            {"propertyName": "hubspot_owner_id", "operator": "EQ",  "value": "727665403"},
-        ]}],
-        "properties": ["dealname", "amount", "closedate", "pipeline", "dealstage"],
-        "limit": 50,
-    }
-    r = _req.post("https://api.hubapi.com/crm/v3/objects/deals/search",
-                  json=payload,
-                  headers={"Authorization": f"Bearer {HUBSPOT_API_KEY}", "Content-Type": "application/json"},
-                  timeout=15)
-    if r.status_code != 200:
-        return jsonify({"error": r.status_code, "detail": r.text[:300]})
-    results = []
-    for d in r.json().get("results", []):
-        p = d.get("properties", {})
-        results.append({
-            "id":       d["id"],
-            "nom":      p.get("dealname"),
-            "montant":  p.get("amount"),
-            "closedate":p.get("closedate", "")[:10],
-            "pipeline": p.get("pipeline"),
-            "stage":    p.get("dealstage"),
-        })
-    return jsonify({"total": r.json().get("total", 0), "deals": results})
-
 
 @app.route("/dash/api/debug-dn")
 def dash_api_debug_dn():
@@ -1898,4 +1865,4 @@ if __name__ == "__main__":
         print("[TEST MODE] Aucune écriture HubSpot ne sera effectuée.")
 
     print(f"Naali Planner — {cfg.OWNER_NAME} — http://localhost:{args.port}")
-    app.run(debug=True, port=args.port, host="0.0.0.0")
+    app.run(debug=False, port=args.port, host="0.0.0.0")
