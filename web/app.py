@@ -330,8 +330,8 @@ def api_today():
             f_m = ex.submit(get_ca_mois_courant, _owner_id())
             f_y = ex.submit(get_ca_ytd, _owner_id())
             ca_mois, ca_ytd = f_m.result(), f_y.result()
-        pharmacies = _load_pharmacies()
-        ca_objectif = sum(float(p.get("ca_2025") or p.get("ca") or 0) for p in filter_clients(pharmacies))
+        # ca_objectif non calculé ici (chargement pharmacies trop lent pour les grands portefeuilles)
+        ca_objectif = 0.0
     except Exception:
         pass
 
