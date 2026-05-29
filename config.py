@@ -1,4 +1,11 @@
-HUBSPOT_API_KEY   = "pat-eu1-37f11d89-d0ae-45c7-b584-18773f12f018"
+import os as _os, pathlib as _pl
+_env_file = _pl.Path(__file__).parent / ".env"
+if _env_file.exists():
+    for _line in _env_file.read_text().splitlines():
+        if "=" in _line and not _line.startswith("#"):
+            _k, _v = _line.split("=", 1)
+            _os.environ.setdefault(_k.strip(), _v.strip())
+HUBSPOT_API_KEY   = _os.getenv("HUBSPOT_API_KEY", "")
 HUB_ID            = "143439337"
 TEST_MODE         = False
 SECRET_KEY        = "naali-local-secret-2026"
