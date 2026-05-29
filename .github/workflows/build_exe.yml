@@ -22,8 +22,14 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
+      - name: Create .env
+        run: echo "HUBSPOT_API_KEY=${{ secrets.HUBSPOT_API_KEY }}" > .env
+
       - name: Build EXE
         run: pyinstaller naali_planner.spec --clean --noconfirm
+
+      - name: Copy .env to dist
+        run: copy .env dist\NaaliPlanner\.env
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -48,8 +54,14 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
+      - name: Create .env
+        run: echo "HUBSPOT_API_KEY=${{ secrets.HUBSPOT_API_KEY }}" > .env
+
       - name: Build app
         run: pyinstaller naali_planner.spec --clean --noconfirm
+
+      - name: Copy .env to dist
+        run: cp .env dist/NaaliPlanner/.env
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
